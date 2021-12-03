@@ -1,14 +1,24 @@
-from typing import TYPE_CHECKING
+import uuid
 
-from sqlalchemy import Boolean, Column, Integer, String
-from sqlalchemy.orm import relationship
+from sqlalchemy import Boolean, Column, Integer, String, DateTime, Float
+from sqlalchemy.dialects.postgresql import UUID
 
 from app.db.base_class import Base
 
 class User(Base):
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     full_name = Column(String, index=True)
-    email = Column(String, unique=True, index=True, nullable=False)
-    hashed_password = Column(String, nullable=False)
+    email = Column(String(255))
+    hashed_password = Column(String(512))
     is_active = Column(Boolean(), default=True)
     is_superuser = Column(Boolean(), default=False)
+    #inserted new columns
+    name = Column(String(255), default="")
+    budget = Column(Float(), default=0.0)
+    salt = Column(String(255))
+    private_key = Column(String(2048))
+    verify_key = Column(String(2048))
+    added_by = Column(String(2048))
+    website = Column(String(2048))
+    institution = Column(String(2048))
+    created_at = Column(DateTime())
