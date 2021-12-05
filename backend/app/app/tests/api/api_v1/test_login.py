@@ -20,6 +20,7 @@ def test_get_access_token(client: TestClient) -> None:
 def test_use_access_token(
     client: TestClient, superuser_token_headers: Dict[str, str]
 ) -> None:
+    print(superuser_token_headers)
     r = client.post(
         f"{settings.API_V1_STR}/login/test-token", headers=superuser_token_headers,
     )
