@@ -1,6 +1,6 @@
 from typing import Any, List
 
-from fastapi import APIRouter, Body, Depends, HTTPException
+from fastapi import APIRouter, Body, Depends, HTTPException, File, UploadFile
 from fastapi.encoders import jsonable_encoder
 from pydantic.networks import EmailStr
 from sqlalchemy.orm import Session
@@ -44,6 +44,30 @@ def create_user(
             detail="The user with this username already exists in the system.",
         )
     user = crud.user.create(db, obj_in=user_in)
+    if settings.EMAILS_ENABLED and user_in.email:
+        send_new_account_email(
+            email_to=user_in.email, username=user_in.email, password=user_in.password
+        )
+    return user
+
+@router.post("/daa", response_model=schemas.User)
+def create_user_daa(
+    *,
+    db: Session = Depends(deps.get_db),
+    user_in: schemas.UserCreate,
+    file: UploadFile = File(...),
+) -> Any:
+    """
+    Create new user.
+    """
+    user = crud.user.get_by_email(db, email=user_in.email)
+    if user:
+        raise HTTPException(
+            status_code=400,
+            detail="The user with this username already exists in the system.",
+        )
+    user_in.daa_pdf = file
+    user = crud.user.create_with_daa(db, obj_in=user_in)
     if settings.EMAILS_ENABLED and user_in.email:
         send_new_account_email(
             email_to=user_in.email, username=user_in.email, password=user_in.password

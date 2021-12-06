@@ -1,4 +1,5 @@
 from typing import Dict
+import PyPDF2
 
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
@@ -29,7 +30,6 @@ def test_get_users_normal_user_me(
     assert current_user["is_active"] is True
     assert current_user["is_superuser"] is False
     assert current_user["email"] == settings.EMAIL_TEST_USER
-
 
 def test_create_user_new_email(
     client: TestClient, superuser_token_headers: dict, db: Session
@@ -93,6 +93,18 @@ def test_create_user_by_normal_user(
     )
     assert r.status_code == 400
 
+def test_create_user_by_daa_user(
+    client: TestClient, normal_user_token_headers: Dict[str, str]
+) -> None:
+    username = random_email()
+    password = random_lower_string()
+    file = open('ex.pdf', 'rb')
+    fileReader = PyPDF2.PdfFileReader(file)
+    data = {"email": username, "password": password, "daa_pdf": fileReader}
+    r = client.post(
+        f"{settings.API_V1_STR}/users/daa", headers=normal_user_token_headers, json=data
+    )
+    assert r.status_code == 400
 
 def test_retrieve_users(
     client: TestClient, superuser_token_headers: dict, db: Session
