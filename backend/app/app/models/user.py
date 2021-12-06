@@ -1,6 +1,6 @@
 import uuid
 
-from sqlalchemy import Boolean, Column, Integer, String, DateTime, Float
+from sqlalchemy import Boolean, Column, Integer, String, DateTime, Float, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 
 from app.db.base_class import Base
@@ -22,3 +22,4 @@ class User(Base):
     website = Column(String(2048))
     institution = Column(String(2048))
     created_at = Column(DateTime())
+    daa_pdf = Column(Integer, ForeignKey("daa_pdf.id"))
