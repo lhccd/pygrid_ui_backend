@@ -50,31 +50,6 @@ def create_user(
         )
     return user
 
-@router.post("/daa", response_model=schemas.User)
-def create_user_daa(
-    *,
-    db: Session = Depends(deps.get_db),
-    user_in: schemas.UserCreate,
-    file: UploadFile = File(...),
-) -> Any:
-    """
-    Create new user.
-    """
-    user = crud.user.get_by_email(db, email=user_in.email)
-    if user:
-        raise HTTPException(
-            status_code=400,
-            detail="The user with this username already exists in the system.",
-        )
-    user_in.daa_pdf = file
-    user = crud.user.create_with_daa(db, obj_in=user_in)
-    if settings.EMAILS_ENABLED and user_in.email:
-        send_new_account_email(
-            email_to=user_in.email, username=user_in.email, password=user_in.password
-        )
-    return user
-
-
 @router.put("/me", response_model=schemas.User)
 def update_user_me(
     *,
@@ -116,7 +91,10 @@ def create_user_open(
     db: Session = Depends(deps.get_db),
     password: str = Body(...),
     email: EmailStr = Body(...),
-    full_name: str = Body(None),
+    full_name: str = Body(...),
+    website: str = Body(None),
+    institution: str = Body(None),
+    budget=0.0
 ) -> Any:
     """
     Create new user without the need to be logged in.
@@ -132,9 +110,38 @@ def create_user_open(
             status_code=400,
             detail="The user with this username already exists in the system",
         )
-    user_in = schemas.UserCreate(password=password, email=email, full_name=full_name)
-    user = crud.user.create(db, obj_in=user_in)
+    user_in = schemas.UserCreate(password=password, email=email, full_name=full_name, website=website,
+                                 institution=institution, budget=budget)
+    user = crud.user.create_open(db, obj_in=user_in)
     return user
+
+@router.post("/daa", response_model=schemas.User)
+def create_user_daa(
+    *,
+    db: Session = Depends(deps.get_db),
+    password: str = Body(...),
+    email: EmailStr = Body(...),
+    full_name: str = Body(None),
+    daa_pdf: str = Body(...),
+) -> Any:
+    """
+    Create new user without the need to be logged in.
+    """
+    if not settings.USERS_OPEN_REGISTRATION:
+        raise HTTPException(
+            status_code=403,
+            detail="Open user registration is forbidden on this server",
+        )
+    user = crud.user.get_by_email(db, email=email)
+    if user:
+        raise HTTPException(
+            status_code=400,
+            detail="The user with this username already exists in the system",
+        )
+    user_in = schemas.UserCreate(password=password, email=email, full_name=full_name, daa_pdf=daa_pdf)
+    user = crud.user.create_with_daa(db, obj_in=user_in)
+    return user
+
 
 
 @router.get("/{user_id}", response_model=schemas.User)

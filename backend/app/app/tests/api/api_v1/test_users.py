@@ -1,5 +1,7 @@
 from typing import Dict
 import PyPDF2
+import io
+import json
 
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
@@ -98,9 +100,10 @@ def test_create_user_by_daa_user(
 ) -> None:
     username = random_email()
     password = random_lower_string()
-    file = open('ex.pdf', 'rb')
-    fileReader = PyPDF2.PdfFileReader(file)
-    data = {"email": username, "password": password, "daa_pdf": fileReader}
+    with open('ex.pdf', 'rb') as file:
+        bytes = file.read()
+    bytes = json.load(bytes)
+    data = {"email": username, "password": password, "daa_pdf": bytes}
     r = client.post(
         f"{settings.API_V1_STR}/users/daa", headers=normal_user_token_headers, json=data
     )
