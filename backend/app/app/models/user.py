@@ -23,3 +23,4 @@ class User(Base):
     institution = Column(String(2048))
     created_at = Column(DateTime())
     daa_pdf = Column(Integer, ForeignKey("daa_pdf.id"))
+    role = Column(Integer, ForeignKey("role.id"))
