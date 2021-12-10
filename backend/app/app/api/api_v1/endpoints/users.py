@@ -73,7 +73,6 @@ def update_user_me(
     user = crud.user.update(db, db_obj=current_user, obj_in=user_in)
     return user
 
-
 @router.get("/me", response_model=schemas.User)
 def read_user_me(
     db: Session = Depends(deps.get_db),
@@ -116,13 +115,13 @@ def create_user_open(
     return user
 
 @router.post("/daa", response_model=schemas.User)
-def create_user_daa(
+async def create_user_daa(
     *,
     db: Session = Depends(deps.get_db),
     password: str = Body(...),
     email: EmailStr = Body(...),
-    full_name: str = Body(None),
-    daa_pdf: str = Body(...),
+    full_name: str = Body(...),
+    daa_pdf: UploadFile = File(...),
 ) -> Any:
     """
     Create new user without the need to be logged in.
@@ -138,9 +137,21 @@ def create_user_daa(
             status_code=400,
             detail="The user with this username already exists in the system",
         )
-    user_in = schemas.UserCreate(password=password, email=email, full_name=full_name, daa_pdf=daa_pdf)
+    pdf_file = await daa_pdf.read()
+    pdf_obj = models.pdf.PDFObject(binary=pdf_file)
+    user_in = schemas.UserCreate(password=password, email=email, full_name=full_name, daa_pdf=pdf_obj.binary)
     user = crud.user.create_with_daa(db, obj_in=user_in)
     return user
+
+
+@router.post("/files/")
+async def create_file(file: bytes = File(...)):
+    return {"file_size": len(file)}
+
+
+@router.post("/uploadfile/")
+async def create_upload_file(file: UploadFile = File(...)):
+    return {"filename": file.filename}
 
 
 

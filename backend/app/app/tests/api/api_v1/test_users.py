@@ -101,9 +101,7 @@ def test_create_user_by_daa_user(
     username = random_email()
     password = random_lower_string()
     with open('ex.pdf', 'rb') as file:
-        bytes = file.read()
-    bytes = json.load(bytes)
-    data = {"email": username, "password": password, "daa_pdf": bytes}
+        data = {"email": username, "password": password}
     r = client.post(
         f"{settings.API_V1_STR}/users/daa", headers=normal_user_token_headers, json=data
     )

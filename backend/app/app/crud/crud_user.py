@@ -13,6 +13,13 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
     def get_by_email(self, db: Session, *, email: str) -> Optional[User]:
         return db.query(User).filter(User.email == email).first()
 
+    def get_pdf_by_email(self, db: Session, *, email: str) -> Optional[User]:
+        user = db.query(User).filter(User.email == email).first()
+        pdf_id = user.daa_pdf
+        pdf = db.query(PDFObject).filter(PDFObject.id == pdf_id).first()
+        with open('example.pdf', 'wb') as fout:
+            fout.write(pdf.binary)
+
     def create(self, db: Session, *, obj_in: UserCreate) -> User:
         db_obj = User(
             email=obj_in.email,
@@ -39,6 +46,9 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
 
     def create_with_daa(self, db: Session, *, obj_in: UserCreate) -> User:
         _pdf_obj = PDFObject(binary=obj_in.daa_pdf)
+        db.add(_pdf_obj)
+        db.commit()
+        db.refresh(_pdf_obj)
         db_obj = User(
             email=obj_in.email,
             hashed_password=get_password_hash(obj_in.password),
@@ -46,7 +56,7 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
             website=obj_in.website,
             institution=obj_in.institution,
             budget=obj_in.budget,
-            daa_pdf=_pdf_obj,
+            daa_pdf=_pdf_obj.id,
         )
         db.add(db_obj)
         db.commit()
