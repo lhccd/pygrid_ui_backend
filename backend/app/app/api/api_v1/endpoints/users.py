@@ -114,13 +114,16 @@ def create_user_open(
     user = crud.user.create_open(db, obj_in=user_in)
     return user
 
-@router.post("/daa", response_model=schemas.User)
+@router.post("/open-daa", response_model=schemas.User)
 async def create_user_daa(
     *,
     db: Session = Depends(deps.get_db),
     password: str = Body(...),
     email: EmailStr = Body(...),
     full_name: str = Body(...),
+    website: str = Body(None),
+    institution: str = Body(None),
+    budget=0.0,
     daa_pdf: UploadFile = File(...),
 ) -> Any:
     """
