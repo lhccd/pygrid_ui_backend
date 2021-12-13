@@ -142,20 +142,10 @@ async def create_user_daa(
         )
     pdf_file = await daa_pdf.read()
     pdf_obj = models.pdf.PDFObject(binary=pdf_file)
-    user_in = schemas.UserCreate(password=password, email=email, full_name=full_name, daa_pdf=pdf_obj.binary)
+    user_in = schemas.UserCreate(password=password, email=email, full_name=full_name, daa_pdf=pdf_obj.binary, website=website,
+                                 institution=institution, budget=budget)
     user = crud.user.create_with_daa(db, obj_in=user_in)
     return user
-
-
-@router.post("/files/")
-async def create_file(file: bytes = File(...)):
-    return {"file_size": len(file)}
-
-
-@router.post("/uploadfile/")
-async def create_upload_file(file: UploadFile = File(...)):
-    return {"filename": file.filename}
-
 
 
 @router.get("/{user_id}", response_model=schemas.User)
