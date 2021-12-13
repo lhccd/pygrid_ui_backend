@@ -5,21 +5,18 @@ from pydantic import BaseModel, EmailStr
 
 class UserBase(BaseModel):
     email: Optional[EmailStr] = None
-    is_active: Optional[bool] = True
-    is_superuser: Optional[bool] = False
     full_name: Optional[str] = None
-    daa_pdf: Optional[bytes]
-    budget: Optional[float]
 
 
 # Properties to receive via API on creation
 class UserCreate(UserBase):
     email: EmailStr
-    full_name: Optional[str]
+    full_name: str
     password: str
     website: Optional[str] = None
     institution: Optional[str] = None
-    budget: Optional[float]
+    daa_pdf: Optional[bytes] = None
+    budget: Optional[float] = None
 
 
 # Properties to receive via API on update
@@ -36,7 +33,17 @@ class UserInDBBase(UserBase):
 
 # Additional properties to return via API
 class User(UserInDBBase):
-    pass
+    email: EmailStr
+    full_name: str
+    institution: Optional[str] = None
+    website: Optional[str] = None
+
+
+class UserProfile(UserInDBBase):
+    email: EmailStr
+    full_name: str
+    institution: Optional[str] = None
+    website: Optional[str] = None
 
 
 # Additional properties stored in DB

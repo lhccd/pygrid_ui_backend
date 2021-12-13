@@ -6,6 +6,7 @@ from pydantic.networks import EmailStr
 from sqlalchemy.orm import Session
 
 from app import crud, models, schemas
+from ....schemas.user import UserProfile
 from app.api import deps
 from app.core.config import settings
 from app.utils import send_new_account_email
@@ -148,21 +149,19 @@ async def create_user_daa(
     return user
 
 
-@router.get("/{user_id}", response_model=schemas.User)
+@router.get("/user-profile", response_model=UserProfile)
 def read_user_by_id(
-    user_id: int,
-    current_user: models.User = Depends(deps.get_current_active_user),
+    current_user: models.User = Depends(deps.get_current_user),
     db: Session = Depends(deps.get_db),
 ) -> Any:
     """
     Get a specific user by id.
     """
-    user = crud.user.get(db, id=user_id)
-    if user == current_user:
-        return user
-    if not crud.user.is_superuser(current_user):
+    user = crud.user.get_user_profile(db, id=current_user.id)
+    if not user:
         raise HTTPException(
-            status_code=400, detail="The user doesn't have enough privileges"
+            status_code=400,
+            detail="The user does not exist"
         )
     return user
 

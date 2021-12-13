@@ -84,6 +84,11 @@ def test_get_pdf(db: Session) -> None:
     username = "example2@e.c"
     pdf = crud.user.get_pdf_by_email(db, email=username)
 
+def test_get_user(db: Session) -> None:
+    username = "a@a.c"
+    user = crud.user.get_user_profile(db, email=username)
+    print(user)
+    assert user.email == username
 
 
 

@@ -6,19 +6,12 @@ from app.core.security import get_password_hash, verify_password
 from app.crud.base import CRUDBase
 from app.models.user import User
 from app.models.pdf import PDFObject
-from app.schemas.user import UserCreate, UserUpdate
+from app.schemas.user import UserCreate, UserUpdate, UserProfile
 
 
 class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
     def get_by_email(self, db: Session, *, email: str) -> Optional[User]:
         return db.query(User).filter(User.email == email).first()
-
-    def get_pdf_by_email(self, db: Session, *, email: str) -> Optional[User]:
-        user = db.query(User).filter(User.email == email).first()
-        pdf_id = user.daa_pdf
-        pdf = db.query(PDFObject).filter(PDFObject.id == pdf_id).first()
-        with open('example.pdf', 'wb') as fout:
-            fout.write(pdf.binary)
 
     def create(self, db: Session, *, obj_in: UserCreate) -> User:
         db_obj = User(
@@ -43,6 +36,9 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         db.commit()
         db.refresh(db_obj)
         return db_obj
+
+    def get_user_profile(self, db: Session, *, id: int) -> Optional[UserProfile]:
+        return db.query(User).filter(User.id == id).first()
 
     def create_with_daa(self, db: Session, *, obj_in: UserCreate) -> User:
         _pdf_obj = PDFObject(binary=obj_in.daa_pdf)
@@ -89,6 +85,14 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
 
     def is_superuser(self, user: User) -> bool:
         return user.is_superuser
+
+    ### Just for testing purposes
+    def get_pdf_by_email(self, db: Session, *, email: str) -> Optional[User]:
+        user = db.query(User).filter(User.email == email).first()
+        pdf_id = user.daa_pdf
+        pdf = db.query(PDFObject).filter(PDFObject.id == pdf_id).first()
+        with open('example.pdf', 'wb') as fout:
+            fout.write(pdf.binary)
 
 
 user = CRUDUser(User)
