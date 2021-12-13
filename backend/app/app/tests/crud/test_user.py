@@ -79,6 +79,13 @@ def test_get_user(db: Session) -> None:
     assert user.email == user_2.email
     assert jsonable_encoder(user) == jsonable_encoder(user_2)
 
+def test_get_pdf(db: Session) -> None:
+    password = "2435"
+    username = "example2@e.c"
+    pdf = crud.user.get_pdf_by_email(db, email=username)
+
+
+
 
 def test_update_user(db: Session) -> None:
     password = random_lower_string()
