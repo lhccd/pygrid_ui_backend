@@ -166,24 +166,27 @@ def read_user_by_id(
     return user
 
 
-@router.put("/{user_id}", response_model=schemas.User)
+@router.put("/", response_model=schemas.User)
 def update_user(
     *,
     db: Session = Depends(deps.get_db),
-    user_id: int,
-    user_in: schemas.UserUpdate,
-    current_user: models.User = Depends(deps.get_current_active_superuser),
+    current_user: models.User = Depends(deps.get_current_user),
+    email: EmailStr = Body(...),
+    full_name: str = Body(...),
+    website: str = Body(None),
+    institution: str = Body(None),
 ) -> Any:
     """
     Update a user.
     """
-    user = crud.user.get(db, id=user_id)
+    user = crud.user.get(db, id=current_user.id)
+    user_in = UserProfile(full_name=full_name, email=email, website=website, institution=institution)
     if not user:
         raise HTTPException(
             status_code=404,
             detail="The user with this username does not exist in the system",
         )
-    user = crud.user.update(db, db_obj=user, obj_in=user_in)
+    user = crud.user.update_profile(db, db_obj=user, obj_in=user_in)
     return user
 
 @router.delete("/")

@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 
 from app import crud
 from app.core.security import verify_password
-from app.schemas.user import UserCreate, UserUpdate
+from app.schemas.user import UserCreate, UserUpdate, UserProfile
 from app.tests.utils.utils import random_email, random_lower_string
 
 
@@ -78,6 +78,16 @@ def test_get_user(db: Session) -> None:
     assert user_2
     assert user.email == user_2.email
     assert jsonable_encoder(user) == jsonable_encoder(user_2)
+
+def test_update_profile(db: Session) -> None:
+    email= "abc@a.c"
+    full_name= "abc"
+    website= "abc"
+    institution= "abc"
+    user_obj = UserProfile(email=email, full_name=full_name, website=website, institution=institution)
+    user = crud.user.get_by_email(db, email="a@a.c")
+    print(user)
+    crud.user.update_profile(db=db, db_obj=user, obj_in=user_obj)
 
 def test_get_pdf(db: Session) -> None:
     password = "2435"
