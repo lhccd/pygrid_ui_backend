@@ -2,5 +2,5 @@
 # imported by Alembic
 from app.db.base_class import Base  # noqa
 from app.models.user import User  # noqa
-from app.models.pdf import PDFObject
-from app.models.roles import Role
+from app.models.pdf import PDFObject # noqa
+from app.models.roles import Role # noqa

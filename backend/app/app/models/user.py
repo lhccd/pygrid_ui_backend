@@ -2,6 +2,7 @@ import uuid
 
 from sqlalchemy import Boolean, Column, Integer, String, DateTime, Float, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import relationship
 
 from app.db.base_class import Base
 
@@ -24,3 +25,4 @@ class User(Base):
     created_at = Column(DateTime())
     daa_pdf = Column(Integer, ForeignKey("daa_pdf.id"))
     role = Column(Integer, ForeignKey("role.id"))
+    roles = relationship("Role", back_populates="user_role")
