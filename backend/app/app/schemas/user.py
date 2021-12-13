@@ -33,10 +33,7 @@ class UserInDBBase(UserBase):
 
 # Additional properties to return via API
 class User(UserInDBBase):
-    email: EmailStr
-    full_name: str
-    institution: Optional[str] = None
-    website: Optional[str] = None
+    pass
 
 
 class UserProfile(UserInDBBase):

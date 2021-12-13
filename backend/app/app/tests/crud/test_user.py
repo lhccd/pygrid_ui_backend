@@ -90,6 +90,9 @@ def test_get_user(db: Session) -> None:
     print(user)
     assert user.email == username
 
+def test_delete(db: Session) -> None:
+    username = "a@a.c"
+    crud.user.delete(db, email=username)
 
 
 def test_update_user(db: Session) -> None:

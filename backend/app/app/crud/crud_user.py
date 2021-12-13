@@ -80,6 +80,10 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
             return None
         return user
 
+    def delete(self, db: Session, *, email: str) -> None:
+        db.query(User).filter(User.email == email).delete()
+        db.commit()
+
     def is_active(self, user: User) -> bool:
         return user.is_active
 

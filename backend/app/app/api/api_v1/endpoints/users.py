@@ -185,3 +185,20 @@ def update_user(
         )
     user = crud.user.update(db, db_obj=user, obj_in=user_in)
     return user
+
+@router.delete("/")
+def delete_user(
+    current_user: models.User = Depends(deps.get_current_user),
+    db: Session = Depends(deps.get_db),
+) -> None:
+    """
+    Here deleting only current user - needs adjustment
+    + deleting roles permissions etc
+    """
+    user_email = current_user.email
+    try:
+        crud.user.delete(db, email=user_email)
+    except Exception as err:
+        raise HTTPException(
+            status_code=500, detail="Error"
+        )
