@@ -6,7 +6,7 @@ from pydantic.networks import EmailStr
 from sqlalchemy.orm import Session
 
 from app import crud, models, schemas
-from ....schemas.user import UserProfile
+from ....schemas.user import UserProfile, PendingUser, ActiveUser, DeniedUser
 from app.api import deps
 from app.core.config import settings
 from app.utils import send_new_account_email
@@ -19,7 +19,7 @@ def read_users(
     db: Session = Depends(deps.get_db),
     skip: int = 0,
     limit: int = 100,
-    current_user: models.User = Depends(deps.get_current_active_superuser),
+    current_user: models.User = Depends(deps.get_current_user),
 ) -> Any:
     """
     Retrieve users.
@@ -205,3 +205,17 @@ def delete_user(
         raise HTTPException(
             status_code=500, detail="Error"
         )
+
+@router.get("/active_users", response_model=List[ActiveUser])
+def read_users(
+    db: Session = Depends(deps.get_db),
+    skip: int = 0,
+    limit: int = 100,
+    current_user: models.User = Depends(deps.get_current_user),
+) -> Any:
+    """
+    Retrieve users.
+    """
+    # fetch users with a status = active/pending/denied
+    users = crud.user.get_multi(db, skip=skip, limit=limit)
+    return users

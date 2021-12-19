@@ -1,5 +1,5 @@
 from typing import Optional
-
+from datetime import datetime
 from pydantic import BaseModel, EmailStr
 
 
@@ -46,3 +46,22 @@ class UserProfile(UserInDBBase):
 # Additional properties stored in DB
 class UserInDB(UserInDBBase):
     hashed_password: str
+
+class ActiveUser(UserBase):
+    budget: Optional[float] = None
+    created_at: Optional[datetime] = None
+    added_by: Optional[str] = None
+
+    class Config:
+        orm_mode = True
+
+class PendingUser(UserBase):
+    created_at: Optional[datetime] = None
+    daa_pdf: Optional[bytes] = None
+    institution: Optional[str] = None
+
+class DeniedUser(PendingUser):
+    added_by: Optional[str] = None
+
+    class Config:
+            orm_mode = True
