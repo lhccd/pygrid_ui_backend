@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from app.core.security import get_password_hash, verify_password
 from app.crud.base import CRUDBase
 from app.models.user import User
+from app.models.roles import Role
 from app.models.pdf import PDFObject
 from app.schemas.user import UserCreate, UserUpdate, UserProfile
 
@@ -31,6 +32,7 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
             website=obj_in.website,
             institution=obj_in.institution,
             budget=obj_in.budget,
+            role=obj_in.role
         )
         db.add(db_obj)
         db.commit()
