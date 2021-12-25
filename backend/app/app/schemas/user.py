@@ -18,12 +18,8 @@ class UserCreate(UserBase):
     institution: Optional[str] = None
     daa_pdf: Optional[bytes] = None
     budget: Optional[float] = None
-    status: str
+    status: Optional[str]
     role: Optional[int]
-
-    #class Config:
-    #    orm_mode = True
-    #    arbitrary_types_allowed = True
 
 
 # Properties to receive via API on update

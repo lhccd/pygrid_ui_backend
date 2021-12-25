@@ -22,8 +22,7 @@ class Role(Base):
     can_upload_data = Column(Boolean(), default=False)
     can_upload_legal_document = Column(Boolean(), default=False)
     can_edit_domain_settings = Column(Boolean(), default=False)
-    user_role = relationship("User", back_populates="roles")
-    #domain foreign key
+    rel_user = relationship("Domain_User", back_populates="domain_role")
 
     def __str__(self) -> str:
         return (

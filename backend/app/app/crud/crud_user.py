@@ -31,8 +31,7 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
             full_name=obj_in.full_name,
             website=obj_in.website,
             institution=obj_in.institution,
-            budget=obj_in.budget,
-            role=obj_in.role
+            budget=obj_in.budget
         )
         db.add(db_obj)
         db.commit()
