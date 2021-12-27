@@ -1,6 +1,7 @@
 from typing import Optional
 from datetime import datetime
 from pydantic import BaseModel, EmailStr
+from app.models.roles import Role
 
 
 class UserBase(BaseModel):
@@ -17,6 +18,8 @@ class UserCreate(UserBase):
     institution: Optional[str] = None
     daa_pdf: Optional[bytes] = None
     budget: Optional[float] = None
+    status: Optional[str]
+    role: Optional[int]
 
 
 # Properties to receive via API on update
@@ -47,6 +50,7 @@ class UserProfile(UserInDBBase):
 class UserInDB(UserInDBBase):
     hashed_password: str
 
+# Schemas for users table
 class ActiveUser(UserBase):
     budget: Optional[float] = None
     created_at: Optional[datetime] = None
