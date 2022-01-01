@@ -19,7 +19,6 @@ class UserCreate(UserBase):
     daa_pdf: Optional[bytes] = None
     budget: Optional[float] = None
     status: Optional[str]
-    role: Optional[int]
 
 
 # Properties to receive via API on update
@@ -52,6 +51,7 @@ class UserInDB(UserInDBBase):
 
 # Schemas for users table
 class ActiveUser(UserBase):
+    id: Optional[int] = None
     budget: Optional[float] = None
     created_at: Optional[datetime] = None
     added_by: Optional[str] = None
