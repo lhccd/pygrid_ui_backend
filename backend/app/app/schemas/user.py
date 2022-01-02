@@ -1,3 +1,5 @@
+import uuid
+
 from typing import Optional
 from datetime import datetime
 from pydantic import BaseModel, EmailStr
@@ -51,7 +53,7 @@ class UserInDB(UserInDBBase):
 
 # Schemas for users table
 class ActiveUser(UserBase):
-    id: Optional[int] = None
+    id: Optional[uuid.UUID]
     budget: Optional[float] = None
     created_at: Optional[datetime] = None
     added_by: Optional[str] = None

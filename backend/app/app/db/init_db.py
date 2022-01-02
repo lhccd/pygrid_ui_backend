@@ -75,6 +75,19 @@ def init_db(db: Session) -> None:
     if not data_scientist:
         data_scientist = crud.role.create(db, obj_in=data_scientist_in)
 
+    # default domain
+
+    domain_in = schemas.DomainCreate(
+        name = "Default Domain",
+        support_email = settings.FIRST_SUPERUSER,
+        version_name = "1.0"
+    )
+
+    domain = crud.domain.get_by_name(db, name="Default Domain")
+
+    if not domain:
+        domain = crud.domain.create(db, obj_in = domain_in)
+
     user = crud.user.get_by_email(db, email=settings.FIRST_SUPERUSER)
 
     if not user:
