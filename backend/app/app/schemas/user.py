@@ -17,6 +17,7 @@ class UserCreate(UserBase):
     institution: Optional[str] = None
     daa_pdf: Optional[bytes] = None
     budget: Optional[float] = None
+    status: str = ""
 
 
 # Properties to receive via API on update

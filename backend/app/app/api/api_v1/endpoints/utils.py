@@ -7,7 +7,7 @@ from app import models, schemas
 from app.api import deps
 from app.core.celery_app import celery_app
 from app.utils import send_test_email
-
+#from app.crud.crud_feedback import CRUDFeedback
 router = APIRouter()
 
 
@@ -33,3 +33,15 @@ def test_email(
     """
     send_test_email(email_to=email_to)
     return {"msg": "Test email sent"}
+"""
+@router.post("/submit-feedback/", response_model=schemas.Feedback, status_code=201)
+def submit_feedback(
+    *,
+    db: Session = Depends(deps.get_db),
+    frustrations: str = Body(...),
+    suggestions: str = Body(...),
+) -> Any:
+
+    return CRUDFeedback.create_feedback(db, frustrations=frustrations, suggestions=suggestions)
+
+"""
