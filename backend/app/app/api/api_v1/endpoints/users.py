@@ -74,8 +74,8 @@ def update_user_password(
     user = crud.user.update(db, db_obj=current_user, obj_in=user_in)
     return user
 
-@router.get("/me", response_model=schemas.User)
-def read_user_me(
+@router.get("/id", response_model=schemas.User)
+def get_user_by_id(
     db: Session = Depends(deps.get_db),
     current_user: models.User = Depends(deps.get_current_active_user),
 ) -> Any:
