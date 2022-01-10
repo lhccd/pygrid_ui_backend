@@ -208,7 +208,7 @@ def delete_user(
             status_code=500, detail="Error"
         )
 
-@router.get("/active_users", response_model=List[ActiveUser])
+@router.get("/active-users", response_model=List[ActiveUser])
 def read_users(
     db: Session = Depends(deps.get_db),
     skip: int = 0,

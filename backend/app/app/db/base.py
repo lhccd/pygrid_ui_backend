@@ -5,3 +5,5 @@ from app.models.user import User  # noqa
 from app.models.pdf import PDFObject # noqa
 from app.models.roles import Role # noqa
 from app.models.feedback import Feedback # noqa
+from app.models.domain import Domain # noqa
+from app.models.domain_user import Domain_User # noqa
