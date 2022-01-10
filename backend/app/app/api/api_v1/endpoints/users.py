@@ -51,26 +51,26 @@ def create_user(
         )
     return user
 
-@router.put("/me", response_model=schemas.User)
-def update_user_me(
+@router.put("/update-password", response_model=schemas.User)
+def update_user_password(
     *,
     db: Session = Depends(deps.get_db),
+    current_password: str = Body(None),
     password: str = Body(None),
-    full_name: str = Body(None),
-    email: EmailStr = Body(None),
-    current_user: models.User = Depends(deps.get_current_active_user),
+    current_user: models.User = Depends(deps.get_current_user),
 ) -> Any:
     """
     Update own user.
     """
     current_user_data = jsonable_encoder(current_user)
     user_in = schemas.UserUpdate(**current_user_data)
-    if password is not None:
+    if current_password is user_in.password and password is not None:
         user_in.password = password
-    if full_name is not None:
-        user_in.full_name = full_name
-    if email is not None:
-        user_in.email = email
+    else:
+        raise HTTPException(
+            status_code=400,
+            detail="Current password could not be confirmed. Please check again."
+        )
     user = crud.user.update(db, db_obj=current_user, obj_in=user_in)
     return user
 
@@ -188,6 +188,8 @@ def update_user(
         )
     user = crud.user.update_profile(db, db_obj=user, obj_in=user_in)
     return user
+
+
 
 @router.delete("/")
 def delete_user(
