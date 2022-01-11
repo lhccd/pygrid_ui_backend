@@ -1,4 +1,5 @@
 from typing import Any, Dict, Optional, Union
+from uuid import UUID
 
 from sqlalchemy.orm import Session
 
@@ -99,13 +100,9 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
     def is_superuser(self, user: User) -> bool:
         return user.is_superuser
 
-    ### Just for testing purposes
-    def get_pdf_by_email(self, db: Session, *, email: str) -> Optional[User]:
+    def get_pdf_by_email(self, db: Session, *, email: str) -> Optional[PDFObject]:
         user = db.query(User).filter(User.email == email).first()
         pdf_id = user.daa_pdf
-        pdf = db.query(PDFObject).filter(PDFObject.id == pdf_id).first()
-        with open('example.pdf', 'wb') as fout:
-            fout.write(pdf.binary)
-
+        return db.query(PDFObject).filter(PDFObject.id == pdf_id).first()
 
 user = CRUDUser(User)

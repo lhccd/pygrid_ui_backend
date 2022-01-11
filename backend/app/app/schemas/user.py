@@ -1,4 +1,5 @@
 import uuid
+from sqlite3 import Date
 
 from typing import Optional
 from datetime import datetime
@@ -47,9 +48,18 @@ class UserProfile(UserInDBBase):
     website: Optional[str] = None
 
 
+class UserDetail(UserProfile):
+    role: Optional[str]
+    budget: Optional[int]
+    created_at: Optional[datetime]
+    added_by: Optional[str]
+    daa_pdf: Optional[bytes]
+
+
 # Additional properties stored in DB
 class UserInDB(UserInDBBase):
     hashed_password: str
+
 
 # Schemas for users table
 class ActiveUser(UserBase):
@@ -61,13 +71,15 @@ class ActiveUser(UserBase):
     class Config:
         orm_mode = True
 
+
 class PendingUser(UserBase):
     created_at: Optional[datetime] = None
     daa_pdf: Optional[bytes] = None
     institution: Optional[str] = None
 
+
 class DeniedUser(PendingUser):
     added_by: Optional[str] = None
 
     class Config:
-            orm_mode = True
+        orm_mode = True

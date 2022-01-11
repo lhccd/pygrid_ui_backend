@@ -1,3 +1,5 @@
+import io
+import uuid
 from typing import Any, List
 
 from fastapi import APIRouter, Body, Depends, HTTPException, File, UploadFile
@@ -5,8 +7,13 @@ from fastapi.encoders import jsonable_encoder
 from pydantic.networks import EmailStr
 from sqlalchemy.orm import Session
 
+from fastapi.responses import FileResponse
+
 from app import crud, models, schemas
-from ....schemas.user import UserProfile, PendingUser, ActiveUser, DeniedUser
+from starlette.responses import StreamingResponse
+
+from ....models.pdf import PDFObject
+from ....schemas.user import UserProfile, PendingUser, ActiveUser, DeniedUser, UserDetail
 from app.api import deps
 from app.core.config import settings
 from app.utils import send_new_account_email
@@ -16,10 +23,10 @@ router = APIRouter()
 
 @router.get("/", response_model=List[schemas.User])
 def read_users(
-    db: Session = Depends(deps.get_db),
-    skip: int = 0,
-    limit: int = 100,
-    current_user: models.User = Depends(deps.get_current_user),
+        db: Session = Depends(deps.get_db),
+        skip: int = 0,
+        limit: int = 100,
+        current_user: models.User = Depends(deps.get_current_user),
 ) -> Any:
     """
     Retrieve users.
@@ -30,10 +37,10 @@ def read_users(
 
 @router.post("/", response_model=schemas.User)
 def create_user(
-    *,
-    db: Session = Depends(deps.get_db),
-    user_in: schemas.UserCreate,
-    current_user: models.User = Depends(deps.get_current_active_superuser),
+        *,
+        db: Session = Depends(deps.get_db),
+        user_in: schemas.UserCreate,
+        current_user: models.User = Depends(deps.get_current_active_superuser),
 ) -> Any:
     """
     Create new user.
@@ -51,13 +58,14 @@ def create_user(
         )
     return user
 
+
 @router.put("/update-password", response_model=schemas.User)
 def update_user_password(
-    *,
-    db: Session = Depends(deps.get_db),
-    current_password: str = Body(None),
-    password: str = Body(None),
-    current_user: models.User = Depends(deps.get_current_user),
+        *,
+        db: Session = Depends(deps.get_db),
+        current_password: str = Body(None),
+        password: str = Body(None),
+        current_user: models.User = Depends(deps.get_current_user),
 ) -> Any:
     """
     Update own user.
@@ -74,27 +82,45 @@ def update_user_password(
     user = crud.user.update(db, db_obj=current_user, obj_in=user_in)
     return user
 
-@router.get("/id", response_model=schemas.User)
+
+@router.get("/user-detail", response_model=UserDetail, responses={200: {"Success": "User Fetched Successfully"}})
 def get_user_by_id(
-    db: Session = Depends(deps.get_db),
-    current_user: models.User = Depends(deps.get_current_active_user),
+        *,
+        db: Session = Depends(deps.get_db),
+        user_email: EmailStr,
+        current_user: models.User = Depends(deps.get_current_user)
 ) -> Any:
-    """
-    Get current user.
-    """
-    return current_user
+    user = crud.user.get_by_email(db, email=user_email)
+    if not user:
+        raise HTTPException(
+            status_code=401,
+            detail="User not found"
+        )
+    return user
+
+
+@router.get("/user-daa", responses={200: {"content": {"application/pdf": {}}}})
+def get_user_daa_by_id(
+        *,
+        db: Session = Depends(deps.get_db),
+        user_email: EmailStr,
+        current_user: models.User = Depends(deps.get_current_user)
+) -> Any:
+    pdf_obj = crud.user.get_pdf_by_email(db, email=user_email)
+
+    return StreamingResponse(io.BytesIO(pdf_obj.binary), media_type="application/pdf")
 
 
 @router.post("/open", response_model=schemas.User)
 def create_user_open(
-    *,
-    db: Session = Depends(deps.get_db),
-    password: str = Body(...),
-    email: EmailStr = Body(...),
-    full_name: str = Body(...),
-    website: str = Body(None),
-    institution: str = Body(None),
-    budget=0.0
+        *,
+        db: Session = Depends(deps.get_db),
+        password: str = Body(...),
+        email: EmailStr = Body(...),
+        full_name: str = Body(...),
+        website: str = Body(None),
+        institution: str = Body(None),
+        budget=0.0
 ) -> Any:
     """
     Create new user without the need to be logged in.
@@ -115,17 +141,18 @@ def create_user_open(
     user = crud.user.create_open(db, obj_in=user_in)
     return user
 
+
 @router.post("/open-daa", response_model=schemas.User)
 async def create_user_daa(
-    *,
-    db: Session = Depends(deps.get_db),
-    password: str = Body(...),
-    email: EmailStr = Body(...),
-    full_name: str = Body(...),
-    website: str = Body(None),
-    institution: str = Body(None),
-    budget=0.0,
-    daa_pdf: UploadFile = File(...),
+        *,
+        db: Session = Depends(deps.get_db),
+        password: str = Body(...),
+        email: EmailStr = Body(...),
+        full_name: str = Body(...),
+        website: str = Body(None),
+        institution: str = Body(None),
+        budget=0.0,
+        daa_pdf: UploadFile = File(...),
 ) -> Any:
     """
     Create new user without the need to be logged in.
@@ -143,7 +170,8 @@ async def create_user_daa(
         )
     pdf_file = await daa_pdf.read()
     pdf_obj = models.pdf.PDFObject(binary=pdf_file)
-    user_in = schemas.UserCreate(password=password, email=email, full_name=full_name, daa_pdf=pdf_obj.binary, website=website,
+    user_in = schemas.UserCreate(password=password, email=email, full_name=full_name, daa_pdf=pdf_obj.binary,
+                                 website=website,
                                  institution=institution, budget=budget)
     user = crud.user.create_with_daa(db, obj_in=user_in)
     return user
@@ -151,8 +179,8 @@ async def create_user_daa(
 
 @router.get("/user-profile", response_model=UserProfile)
 def read_user_by_id(
-    current_user: models.User = Depends(deps.get_current_user),
-    db: Session = Depends(deps.get_db),
+        current_user: models.User = Depends(deps.get_current_user),
+        db: Session = Depends(deps.get_db),
 ) -> Any:
     """
     Get a specific user by id.
@@ -168,13 +196,13 @@ def read_user_by_id(
 
 @router.put("/", response_model=schemas.User)
 def update_user(
-    *,
-    db: Session = Depends(deps.get_db),
-    current_user: models.User = Depends(deps.get_current_user),
-    email: EmailStr = Body(...),
-    full_name: str = Body(...),
-    website: str = Body(None),
-    institution: str = Body(None),
+        *,
+        db: Session = Depends(deps.get_db),
+        current_user: models.User = Depends(deps.get_current_user),
+        email: EmailStr = Body(...),
+        full_name: str = Body(...),
+        website: str = Body(None),
+        institution: str = Body(None),
 ) -> Any:
     """
     Update a user.
@@ -190,11 +218,10 @@ def update_user(
     return user
 
 
-
 @router.delete("/")
 def delete_user(
-    current_user: models.User = Depends(deps.get_current_user),
-    db: Session = Depends(deps.get_db),
+        current_user: models.User = Depends(deps.get_current_user),
+        db: Session = Depends(deps.get_db),
 ) -> None:
     """
     Here deleting only current user - needs adjustment
@@ -208,12 +235,13 @@ def delete_user(
             status_code=500, detail="Error"
         )
 
+
 @router.get("/active-users", response_model=List[ActiveUser])
 def read_users(
-    db: Session = Depends(deps.get_db),
-    skip: int = 0,
-    limit: int = 100,
-    current_user: models.User = Depends(deps.get_current_user),
+        db: Session = Depends(deps.get_db),
+        skip: int = 0,
+        limit: int = 100,
+        current_user: models.User = Depends(deps.get_current_user),
 ) -> Any:
     """
     Retrieve users.
