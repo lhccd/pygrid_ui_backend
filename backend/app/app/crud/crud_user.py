@@ -55,6 +55,7 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
             institution=obj_in.institution,
             budget=obj_in.budget,
             daa_pdf=_pdf_obj.id,
+            status="pending"
         )
         db.add(db_obj)
         db.commit()
@@ -97,12 +98,12 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
     def is_active(self, user: User) -> bool:
         return user.is_active
 
-    def is_superuser(self, user: User) -> bool:
-        return user.is_superuser
-
     def get_pdf_by_email(self, db: Session, *, email: str) -> Optional[PDFObject]:
         user = db.query(User).filter(User.email == email).first()
         pdf_id = user.daa_pdf
         return db.query(PDFObject).filter(PDFObject.id == pdf_id).first()
+
+    def get_users_by_status(self,db: Session, *, skip: int = 0, limit: int = 100, status: str = "accepted"):
+        return db.query(User).filter(User.status == status).offset(skip).limit(limit).all()
 
 user = CRUDUser(User)

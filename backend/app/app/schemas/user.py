@@ -26,6 +26,7 @@ class UserCreate(UserBase):
 
 # Properties to receive via API on update
 class UserUpdate(UserBase):
+    status: Optional[str] = None
     password: Optional[str] = None
 
 
@@ -38,6 +39,7 @@ class UserInDBBase(UserBase):
 
 # Additional properties to return via API
 class User(UserInDBBase):
+    status: str
     pass
 
 
@@ -46,6 +48,7 @@ class UserProfile(UserInDBBase):
     full_name: str
     institution: Optional[str] = None
     website: Optional[str] = None
+    status: Optional[str] = None
 
 
 class UserDetail(UserProfile):

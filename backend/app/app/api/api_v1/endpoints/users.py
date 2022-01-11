@@ -13,50 +13,12 @@ from app import crud, models, schemas
 from starlette.responses import StreamingResponse
 
 from ....models.pdf import PDFObject
-from ....schemas.user import UserProfile, PendingUser, ActiveUser, DeniedUser, UserDetail
+from ....schemas.user import UserProfile, PendingUser, ActiveUser, DeniedUser, UserDetail, UserUpdate
 from app.api import deps
 from app.core.config import settings
 from app.utils import send_new_account_email
 
 router = APIRouter()
-
-
-@router.get("/", response_model=List[schemas.User])
-def read_users(
-        db: Session = Depends(deps.get_db),
-        skip: int = 0,
-        limit: int = 100,
-        current_user: models.User = Depends(deps.get_current_user),
-) -> Any:
-    """
-    Retrieve users.
-    """
-    users = crud.user.get_multi(db, skip=skip, limit=limit)
-    return users
-
-
-@router.post("/", response_model=schemas.User)
-def create_user(
-        *,
-        db: Session = Depends(deps.get_db),
-        user_in: schemas.UserCreate,
-        current_user: models.User = Depends(deps.get_current_active_superuser),
-) -> Any:
-    """
-    Create new user.
-    """
-    user = crud.user.get_by_email(db, email=user_in.email)
-    if user:
-        raise HTTPException(
-            status_code=400,
-            detail="The user with this username already exists in the system.",
-        )
-    user = crud.user.create(db, obj_in=user_in)
-    if settings.EMAILS_ENABLED and user_in.email:
-        send_new_account_email(
-            email_to=user_in.email, username=user_in.email, password=user_in.password
-        )
-    return user
 
 
 @router.put("/update-password", response_model=schemas.User)
@@ -111,7 +73,7 @@ def get_user_daa_by_id(
     return StreamingResponse(io.BytesIO(pdf_obj.binary), media_type="application/pdf")
 
 
-@router.post("/open", response_model=schemas.User)
+@router.post("/create", response_model=schemas.User)
 def create_user_open(
         *,
         db: Session = Depends(deps.get_db),
@@ -211,11 +173,46 @@ def update_user(
     user_in = UserProfile(full_name=full_name, email=email, website=website, institution=institution)
     if not user:
         raise HTTPException(
-            status_code=404,
+            status_code=400,
             detail="The user with this username does not exist in the system",
         )
     user = crud.user.update_profile(db, db_obj=user, obj_in=user_in)
     return user
+
+
+@router.put("/accept", response_model=schemas.User)
+def accept_user(
+        *,
+        db: Session = Depends(deps.get_db),
+        current_user: models.User = Depends(deps.get_current_user),
+        user_email: EmailStr = Body(...),
+):
+    user = crud.user.get_by_email(db, email=user_email)
+    if not user:
+        raise HTTPException(
+            status_code=404,
+            detail="The user does not exist in the system"
+        )
+    user_in = UserUpdate(status="accepted")
+    return crud.user.update_profile(db, db_obj=user, obj_in=user_in)
+
+
+@router.put("/deny", response_model=schemas.User)
+def deny_user(
+        *,
+        db: Session = Depends(deps.get_db),
+        current_user: models.User = Depends(deps.get_current_user),
+        user_email: EmailStr = Body(...),
+):
+    user = crud.user.get_by_email(db, email=user_email)
+    if not user:
+        raise HTTPException(
+            status_code=404,
+            detail="The user does not exist in the system"
+        )
+    user_in = UserUpdate(status="denied")
+    return crud.user.update_profile(db, db_obj=user, obj_in=user_in)
+
 
 
 @router.delete("/")
@@ -236,16 +233,46 @@ def delete_user(
         )
 
 
-@router.get("/active-users", response_model=List[ActiveUser])
-def read_users(
+@router.get("/accepted-users", response_model=List[ActiveUser])
+def get_accepted_users(
         db: Session = Depends(deps.get_db),
         skip: int = 0,
         limit: int = 100,
         current_user: models.User = Depends(deps.get_current_user),
 ) -> Any:
     """
-    Retrieve users.
+    Retrieve Accepted Users.
+    """
+    # fetch users with a status = accepted/pending/denied
+    users = crud.user.get_users_by_status(db, skip=skip, limit=limit)
+    return users
+
+
+@router.get("/pending-users", response_model=List[ActiveUser])
+def get_pending_users(
+        db: Session = Depends(deps.get_db),
+        skip: int = 0,
+        limit: int = 100,
+        current_user: models.User = Depends(deps.get_current_user),
+) -> Any:
+    """
+    Retrieve Pending Users.
     """
     # fetch users with a status = active/pending/denied
-    users = crud.user.get_multi(db, skip=skip, limit=limit)
+    users = crud.user.get_users_by_status(db, skip=skip, limit=limit, status="pending")
+    return users
+
+
+@router.get("/denied-users", response_model=List[ActiveUser])
+def get_denied_users(
+        db: Session = Depends(deps.get_db),
+        skip: int = 0,
+        limit: int = 100,
+        current_user: models.User = Depends(deps.get_current_user),
+) -> Any:
+    """
+    Retrieve Denied Users.
+    """
+    # fetch users with a status = active/pending/denied
+    users = crud.user.get_users_by_status(db, skip=skip, limit=limit, status="denied")
     return users
