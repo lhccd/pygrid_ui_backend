@@ -1,5 +1,6 @@
 import io
 import uuid
+from datetime import datetime
 from typing import Any, List
 
 from fastapi import APIRouter, Body, Depends, HTTPException, File, UploadFile
@@ -134,7 +135,7 @@ async def create_user_daa(
     pdf_obj = models.pdf.PDFObject(binary=pdf_file)
     user_in = schemas.UserCreate(password=password, email=email, full_name=full_name, daa_pdf=pdf_obj.binary,
                                  website=website,
-                                 institution=institution, budget=budget)
+                                 institution=institution, budget=budget, created_at=datetime.now())
     user = crud.user.create_with_daa(db, obj_in=user_in)
     return user
 
@@ -193,7 +194,7 @@ def accept_user(
             status_code=404,
             detail="The user does not exist in the system"
         )
-    user_in = UserUpdate(status="accepted")
+    user_in = UserUpdate(status="accepted", added_by=current_user.full_name)
     return crud.user.update_profile(db, db_obj=user, obj_in=user_in)
 
 

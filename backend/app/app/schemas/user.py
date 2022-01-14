@@ -22,11 +22,13 @@ class UserCreate(UserBase):
     daa_pdf: Optional[bytes] = None
     budget: Optional[float] = None
     status: str = ""
+    created_at: Optional[datetime]
 
 
 # Properties to receive via API on update
 class UserUpdate(UserBase):
     status: Optional[str] = None
+    added_by: Optional[str] = None
     password: Optional[str] = None
 
 

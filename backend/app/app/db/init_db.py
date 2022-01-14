@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from sqlalchemy.orm import Session
 
 from app import crud, schemas
@@ -90,12 +92,18 @@ def init_db(db: Session) -> None:
 
     user = crud.user.get_by_email(db, email=settings.FIRST_SUPERUSER)
 
-    if not user:
-    #administrator + domain's owner + permissions
-        user_in = schemas.UserCreate(
-            email=settings.FIRST_SUPERUSER,
-            full_name="Thiago Porto",
-            password=settings.FIRST_SUPERUSER_PASSWORD,
-            status="active"
-        )
-        user = crud.user.create(db, obj_in=user_in)  # noqa: F841
+    if user:
+        crud.user.delete(db, email="admin@backend.com")
+
+    # administrator + domain's owner + permissions
+    user_in = schemas.UserCreate(
+        email=settings.FIRST_SUPERUSER,
+        full_name="Thiago Porto",
+        password=settings.FIRST_SUPERUSER_PASSWORD,
+        created_at=datetime.now(),
+        status="accepted",
+        website="openmined.com",
+        institution="OpenMined",
+        budget=1000,
+    )
+    user = crud.user.create(db, obj_in=user_in)  # noqa: F841

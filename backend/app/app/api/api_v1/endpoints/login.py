@@ -31,8 +31,7 @@ def login_access_token(
     )
     if not user:
         raise HTTPException(status_code=400, detail="Incorrect email or password")
-    elif not crud.user.is_active(user):
-        raise HTTPException(status_code=400, detail="Inactive user")
+
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     return {
         "access_token": security.create_access_token(
@@ -42,7 +41,7 @@ def login_access_token(
     }
 
 @router.post("/login/get-token", response_model=schemas.Token)
-def login_access_token(
+def login_get_token(
     db: Session = Depends(deps.get_db), username: str = Body(...),
         password: str = Body(...)
 ) -> Any:
@@ -54,8 +53,8 @@ def login_access_token(
     )
     if not user:
         raise HTTPException(status_code=400, detail="Incorrect email or password")
-    elif not crud.user.is_active(user):
-        raise HTTPException(status_code=400, detail="Inactive user")
+    elif not crud.user.is_accepted(user):
+        raise HTTPException(status_code=400, detail="Not Accepted User")
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     return {
         "access_token": security.create_access_token(

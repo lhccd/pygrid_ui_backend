@@ -19,20 +19,12 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         db_obj = User(
             email=obj_in.email,
             hashed_password=get_password_hash(obj_in.password),
-        )
-        db.add(db_obj)
-        db.commit()
-        db.refresh(db_obj)
-        return db_obj
-
-    def create_open(self, db: Session, *, obj_in: UserCreate) -> User:
-        db_obj = User(
-            email=obj_in.email,
-            hashed_password=get_password_hash(obj_in.password),
             full_name=obj_in.full_name,
             website=obj_in.website,
             institution=obj_in.institution,
-            budget=obj_in.budget
+            budget=obj_in.budget,
+            status="accepted",
+            created_at=obj_in.created_at,
         )
         db.add(db_obj)
         db.commit()
@@ -54,8 +46,9 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
             website=obj_in.website,
             institution=obj_in.institution,
             budget=obj_in.budget,
+            status="pending",
+            created_at=obj_in.created_at,
             daa_pdf=_pdf_obj.id,
-            status="pending"
         )
         db.add(db_obj)
         db.commit()
@@ -69,9 +62,8 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
             update_data = obj_in.dict(exclude_unset=True)
         return super().update(db, db_obj=db_obj, obj_in=update_data)
 
-
     def update(
-        self, db: Session, *, db_obj: User, obj_in: Union[UserUpdate, Dict[str, Any]]
+            self, db: Session, *, db_obj: User, obj_in: Union[UserUpdate, Dict[str, Any]]
     ) -> User:
         if isinstance(obj_in, dict):
             update_data = obj_in
@@ -95,15 +87,16 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         db.query(User).filter(User.email == email).delete()
         db.commit()
 
-    def is_active(self, user: User) -> bool:
-        return user.is_active
+    def is_accepted(self, user: User) -> bool:
+        return user.status == "accepted"
 
     def get_pdf_by_email(self, db: Session, *, email: str) -> Optional[PDFObject]:
         user = db.query(User).filter(User.email == email).first()
         pdf_id = user.daa_pdf
         return db.query(PDFObject).filter(PDFObject.id == pdf_id).first()
 
-    def get_users_by_status(self,db: Session, *, skip: int = 0, limit: int = 100, status: str = "accepted"):
+    def get_users_by_status(self, db: Session, *, skip: int = 0, limit: int = 100, status: str = "accepted"):
         return db.query(User).filter(User.status == status).offset(skip).limit(limit).all()
+
 
 user = CRUDUser(User)
