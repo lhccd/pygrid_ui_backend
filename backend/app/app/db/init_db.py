@@ -92,10 +92,9 @@ def init_db(db: Session) -> None:
 
     user = crud.user.get_by_email(db, email=settings.FIRST_SUPERUSER)
 
-    if user:
-        crud.user.delete(db, email="admin@backend.com")
+#    if user:
+#        crud.user.delete(db, email="admin@backend.com")
 
-    # administrator + domain's owner + permissions
     user_in = schemas.UserCreate(
         email=settings.FIRST_SUPERUSER,
         full_name="Thiago Porto",
@@ -106,4 +105,18 @@ def init_db(db: Session) -> None:
         institution="OpenMined",
         budget=1000,
     )
-    user = crud.user.create(db, obj_in=user_in)  # noqa: F841
+
+    if not user:
+        user = crud.user.create(db, obj_in=user_in)  # noqa: F841
+
+    domain_user = crud.domain_user.get_by_id(db, id=1)
+
+    domain_user_in = schemas.DomainUserCreate(
+        user = user.id,
+        domain = domain.id,
+        role = domain_owner.id
+    )
+
+    if not domain_user:
+        domain_user = crud.domain_user.create(db, obj_in=domain_user_in)
+

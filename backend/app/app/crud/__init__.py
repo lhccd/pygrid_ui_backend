@@ -1,7 +1,7 @@
 from .crud_user import user
 from .crud_role import role
 from .crud_domain import domain
-
+from .crud_domain_user import domain_user
 # For a new basic set of CRUD operations you could just do
 
 # from .base import CRUDBase
