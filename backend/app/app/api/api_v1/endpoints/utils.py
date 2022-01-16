@@ -1,20 +1,24 @@
-from typing import Any
-
-from fastapi import APIRouter, Depends
-from pydantic.networks import EmailStr
-
-from app import models, schemas
-from app.api import deps
 from app.core.celery_app import celery_app
 from app.utils import send_test_email
-#from app.crud.crud_feedback import CRUDFeedback
+from typing import Any, List
+
+from fastapi import APIRouter, Body, Depends
+from pydantic.networks import EmailStr
+from sqlalchemy.orm import Session
+from app import crud, models, schemas
+
+from ....schemas.utils import Feedback
+
+from app.api import deps
+
+
 router = APIRouter()
 
 
 @router.post("/test-celery/", response_model=schemas.Msg, status_code=201)
 def test_celery(
     msg: schemas.Msg,
-    current_user: models.User = Depends(deps.get_current_active_superuser),
+    current_user: models.User = Depends(deps.get_current_user),
 ) -> Any:
     """
     Test Celery worker.
@@ -26,15 +30,16 @@ def test_celery(
 @router.post("/test-email/", response_model=schemas.Msg, status_code=201)
 def test_email(
     email_to: EmailStr,
-    current_user: models.User = Depends(deps.get_current_active_superuser),
+    current_user: models.User = Depends(deps.get_current_user),
 ) -> Any:
     """
     Test emails.
     """
     send_test_email(email_to=email_to)
     return {"msg": "Test email sent"}
-"""
-@router.post("/submit-feedback/", response_model=schemas.Feedback, status_code=201)
+
+
+@router.post("/submit-feedback", response_model=Feedback, status_code=201)
 def submit_feedback(
     *,
     db: Session = Depends(deps.get_db),
@@ -42,6 +47,14 @@ def submit_feedback(
     suggestions: str = Body(...),
 ) -> Any:
 
-    return CRUDFeedback.create_feedback(db, frustrations=frustrations, suggestions=suggestions)
+    return crud.feedback.create_feedback(db, frustrations=frustrations, suggestions=suggestions)
 
-"""
+
+@router.get("/feedbacks", response_model=List[Feedback], status_code=201)
+def get_all_feedbacks(
+        *,
+        db: Session = Depends(deps.get_db),
+        current_user: models.User = Depends(deps.get_current_user),
+) -> Any:
+
+    return crud.feedback.get_all(db=db)

@@ -6,11 +6,11 @@ from app.crud.base import CRUDBase
 from app.models.domain import Domain
 from app.schemas.domain import DomainBase, DomainCreate, DomainUpdate
 
-class CRUDDomain(CRUDBase[DomainBase, DomainCreate, DomainUpdate]):
+class CRUDDomain(CRUDBase[Domain, DomainCreate, DomainUpdate]):
     def get_by_name(self, db: Session, *, name: str) -> Optional[Domain]:
         return db.query(Domain).filter(Domain.name == name).first()
 
-    def create(self, db: Session, *, obj_in: Domain) -> Domain:
+    def create(self, db: Session, *, obj_in: DomainCreate) -> Domain:
         db_obj = Domain(
             name = obj_in.name,
             deployed_on = obj_in.deployed_on,
@@ -25,5 +25,9 @@ class CRUDDomain(CRUDBase[DomainBase, DomainCreate, DomainUpdate]):
         db.commit()
         db.refresh(db_obj)
         return db_obj
+
+
+    def get_domains(self, db: Session, *, skip: int = 0, limit: int = 100):
+        return db.query(Domain).offset(skip).limit(limit).all()
 
 domain = CRUDDomain(Domain)
