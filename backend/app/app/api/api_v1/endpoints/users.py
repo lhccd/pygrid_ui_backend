@@ -35,7 +35,10 @@ def update_user_password(
     """
     current_user_data = jsonable_encoder(current_user)
     user_in = schemas.UserUpdate(**current_user_data)
-    if current_password is user_in.password and password is not None:
+    user = crud.user.authenticate(
+        db, email=current_user.email, password=current_password
+    )
+    if user:
         user_in.password = password
     else:
         raise HTTPException(
