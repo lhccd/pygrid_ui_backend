@@ -18,3 +18,4 @@ class Domain(Base):
     branch = Column(String(255))
     commit_hash = Column(String(255))
     users_in_domain = relationship("Domain_User", back_populates="domain_reference")
+    domain_tags = relationship("Tags", back_populates="domain_rel")

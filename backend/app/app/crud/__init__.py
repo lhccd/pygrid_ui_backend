@@ -3,6 +3,7 @@ from .crud_role import role
 from .crud_domain import domain
 from .crud_domain_user import domain_user
 from .crud_feedback import feedback
+from .crud_tags import tags
 # For a new basic set of CRUD operations you could just do
 
 # from .base import CRUDBase
