@@ -11,6 +11,7 @@ class Domain(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name = Column(String(255))
     deployed_on = Column(DateTime, default=datetime.datetime.utcnow)
+    last_updated = Column(DateTime, default=datetime.datetime.utcnow)
     description = Column(String(2048))
     support_email = Column(String(255))
     version_name = Column(String(255))
