@@ -77,7 +77,7 @@ def get_user_daa_by_id(
     return StreamingResponse(io.BytesIO(pdf_obj.binary), media_type="application/pdf")
 
 
-@router.post("/create", response_model=schemas.User)
+@router.post("/open", response_model=schemas.User)
 def create_user_open(
         *,
         db: Session = Depends(deps.get_db),
@@ -86,10 +86,10 @@ def create_user_open(
         full_name: str = Body(...),
         website: str = Body(None),
         institution: str = Body(None),
-        budget=0.0
+        budget=0.0,
 ) -> Any:
     """
-    Create new user without the need to be logged in.
+    Create new user without daa requirement
     """
     if not settings.USERS_OPEN_REGISTRATION:
         raise HTTPException(
@@ -103,8 +103,8 @@ def create_user_open(
             detail="The user with this username already exists in the system",
         )
     user_in = schemas.UserCreate(password=password, email=email, full_name=full_name, website=website,
-                                 institution=institution, budget=budget)
-    user = crud.user.create_open(db, obj_in=user_in)
+                                 institution=institution, budget=budget, created_at=datetime.now())
+    user = crud.user.create_with_no_daa(db, obj_in=user_in)
     return user
 
 

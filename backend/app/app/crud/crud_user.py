@@ -33,6 +33,22 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
     def get_user_profile(self, db: Session, *, id: int) -> Optional[UserProfile]:
         return db.query(User).filter(User.id == id).first()
 
+    def create_with_no_daa(self, db: Session, *, obj_in: UserCreate) -> User:
+        db_obj = User(
+            email=obj_in.email,
+            hashed_password=get_password_hash(obj_in.password),
+            full_name=obj_in.full_name,
+            website=obj_in.website,
+            institution=obj_in.institution,
+            budget=obj_in.budget,
+            status="pending",
+            created_at=obj_in.created_at
+        )
+        db.add(db_obj)
+        db.commit()
+        db.refresh(db_obj)
+        return db_obj
+
     def create_with_daa(self, db: Session, *, obj_in: UserCreate) -> User:
         _pdf_obj = PDFObject(binary=obj_in.daa_pdf)
         db.add(_pdf_obj)
