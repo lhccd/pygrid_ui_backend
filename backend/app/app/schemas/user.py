@@ -52,6 +52,8 @@ class UserProfile(UserInDBBase):
     website: Optional[str] = None
     status: Optional[str] = None
 
+class UserBudget(UserInDBBase):
+    budget: float
 
 class UserDetail(UserProfile):
     role: Optional[str]

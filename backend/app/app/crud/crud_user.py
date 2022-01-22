@@ -7,7 +7,7 @@ from app.core.security import get_password_hash, verify_password
 from app.crud.base import CRUDBase
 from app.models.user import User
 from app.models.pdf import PDFObject
-from app.schemas.user import UserCreate, UserUpdate, UserProfile
+from app.schemas.user import UserCreate, UserUpdate, UserProfile, UserBudget
 
 
 class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
@@ -61,6 +61,13 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
             update_data = obj_in.dict(exclude_unset=True)
         return super().update(db, db_obj=db_obj, obj_in=update_data)
 
+    def update_budget(self, db: Session, *, db_obj: User, obj_in: UserBudget) -> User:
+        if isinstance(obj_in, dict):
+            update_data = obj_in
+        else:
+            update_data = obj_in.dict(exclude_unset=True)
+        return super().update(db, db_obj=db_obj, obj_in=update_data)
+
     def update(
             self, db: Session, *, db_obj: User, obj_in: Union[UserUpdate, Dict[str, Any]]
     ) -> User:
@@ -96,6 +103,8 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
 
     def get_users_by_status(self, db: Session, *, skip: int = 0, limit: int = 100, status: str = "accepted"):
         return db.query(User).filter(User.status == status).offset(skip).limit(limit).all()
+
+
 
 
 user = CRUDUser(User)

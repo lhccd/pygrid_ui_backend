@@ -14,7 +14,7 @@ from app import crud, models, schemas
 from starlette.responses import StreamingResponse
 
 from ....models.pdf import PDFObject
-from ....schemas.user import UserProfile, PendingUser, ActiveUser, DeniedUser, UserDetail, UserUpdate
+from ....schemas.user import UserProfile, PendingUser, ActiveUser, DeniedUser, UserDetail, UserUpdate, UserBudget
 from app.api import deps
 from app.core.config import settings
 from app.utils import send_new_account_email
@@ -181,6 +181,28 @@ def update_user(
             detail="The user with this username does not exist in the system",
         )
     user = crud.user.update_profile(db, db_obj=user, obj_in=user_in)
+    return user
+
+@router.put("/update-budget", response_model=UserBudget)
+def update_budget(
+        *,
+        db: Session = Depends(deps.get_db),
+        #Check if current user has permissions?
+        current_user: models.User = Depends(deps.get_current_user),
+        user_email: EmailStr,
+        budget: float = Body(...),
+) -> Any:
+    """
+    Update a user.
+    """
+    user = crud.user.get_by_email(db, email=user_email)
+    user_in = UserBudget(budget=budget)
+    if not user:
+        raise HTTPException(
+            status_code=400,
+            detail="The user with this username does not exist in the system",
+        )
+    user = crud.user.update_budget(db, db_obj=user, obj_in=user_in)
     return user
 
 
