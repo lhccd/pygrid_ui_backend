@@ -36,11 +36,20 @@ class Domain(DomainInDBBase):
     pass
 
 
-class DomainDetail(DomainInDBBase):
+class DomainProfile(DomainInDBBase):
     name = str
     deployed_on: Optional[datetime]
     description: Optional[str] = None
     support_email: Optional[str] = None
+
+
+class DomainConfiguration(DomainInDBBase):
+    # TODO: Add require daa when it is ready
+    #require_daa: bool
+    pass
+
+class DomainUpdates(DomainInDBBase):
+    last_updated: Optional[datetime]
     version_name: Optional[str] = None
     repository: Optional[str] = None
     branch: Optional[str] = None

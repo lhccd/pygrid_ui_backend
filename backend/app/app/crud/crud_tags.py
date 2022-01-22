@@ -27,7 +27,7 @@ class CRUDTags(CRUDBase[Tags, TagCreate, TagUpdate]):
     def get_all_tags(self, db: Session, *, skip: int = 0, limit: int = 100):
         return db.query(Tags).offset(skip).limit(limit).all()
 
-    def get_tags_for_domain():
+    def get_tags_for_domain(self):
         pass
 
 tags = CRUDTags(Tags)

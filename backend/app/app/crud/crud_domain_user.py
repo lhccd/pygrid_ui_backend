@@ -23,5 +23,13 @@ class CRUDDomainUser(CRUDBase[Domain_User, DomainUserCreate, DomainUserUpdate]):
         db.refresh(db_obj)
         return db_obj
 
+    def get_role(self, db: Session, *, domain_name: str, user_email):
+        # TODO: GET User Role by domain name and user email, return None if user is not in the domain
+        pass
+
+    def get_owner(self, db: Session, *, domain_name: str):
+        # TODO: GET owner of the domain, return a user detail so that we can now user's name
+        pass
+
 
 domain_user = CRUDDomainUser(Domain_User)
