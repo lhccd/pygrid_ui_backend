@@ -86,7 +86,7 @@ def create_user_open(
         full_name: str = Body(...),
         website: str = Body(None),
         institution: str = Body(None),
-        budget=0.0,
+        budget: int = Body(None),
 ) -> Any:
     """
     Create new user without daa requirement
