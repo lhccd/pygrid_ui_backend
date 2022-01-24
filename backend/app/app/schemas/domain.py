@@ -48,7 +48,8 @@ class DomainConfiguration(DomainInDBBase):
     #require_daa: bool
     pass
 
-class DomainUpdates(DomainInDBBase):
+
+class DomainUpdateVersion(DomainInDBBase):
     last_updated: Optional[datetime]
     version_name: Optional[str] = None
     repository: Optional[str] = None

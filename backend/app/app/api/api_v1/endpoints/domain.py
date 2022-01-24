@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from app import crud, models, schemas
 from app.api import deps
-from ....schemas.domain import Domain, DomainCreate, DomainProfile, DomainConfiguration
+from ....schemas.domain import Domain, DomainCreate, DomainProfile, DomainConfiguration, DomainUpdateVersion
 from ....schemas.tags import Tags
 from ....schemas.user import UserDetail, User
 from ....schemas.domain_user import DomainUserCreate, DomainUser
@@ -182,6 +182,25 @@ def get_domain_configuration(
 ) -> Any:
     """
     Get domain configuration, whether daa is required or not
+    """
+    domain = crud.domain.get_by_name(db, name=domain_name)
+    if not domain:
+        raise HTTPException(
+            status_code=400,
+            detail="This domain " + domain_name + " does not exist",
+        )
+    return domain
+
+
+@router.get("/domain-version", response_model=DomainUpdateVersion)
+def get_domain_version(
+        *,
+        db: Session = Depends(deps.get_db),
+        current_user: models.User = Depends(deps.get_current_user),
+        domain_name: str,
+) -> Any:
+    """
+    Get Domain Version
     """
     domain = crud.domain.get_by_name(db, name=domain_name)
     if not domain:
