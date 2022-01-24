@@ -1,7 +1,7 @@
 import uuid
 import datetime
 
-from sqlalchemy import Column, String, DateTime, Boolean
+from sqlalchemy import Column, String, DateTime, Boolean, ForeignKey, Integer
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import UUID
 
@@ -15,9 +15,9 @@ class Domain(Base):
     description = Column(String(2048))
     support_email = Column(String(255))
     version_name = Column(String(255))
-    # TODO: When I add require_daa field, an error comes up form initialization of db
-    # TODO: Please add: domain_url, require_daa, pdf_daa_id fields
-    #require_daa = Column(Boolean, unique=False, default=True)
+    require_daa = Column(Boolean, unique=False, default=True)
+    domain_url = Column(String(255))
+    pdf_daa_id = Column(Integer, ForeignKey("daa_pdf.id"))
     repository = Column(String(255))
     branch = Column(String(255))
     commit_hash = Column(String(255))
