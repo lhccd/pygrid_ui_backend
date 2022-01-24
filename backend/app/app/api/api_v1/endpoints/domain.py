@@ -154,24 +154,65 @@ def get_domain_owner(
     return domain_user
 
 
+@router.post("/add-tags", response_model=Tags)
+def add_tags_to_domain(
+        *,
+        db: Session = Depends(deps.get_db),
+        current_user: models.User = Depends(deps.get_current_user),
+        tag_name: str = Body(...),
+) -> Any:
+    """
+    Add a tag to the domain
+    """
+    # if tag is not in the list - add it
+
+    #domain = crud.domain.get_by_name(db, name=domain_name)
+    #if not domain:
+    #    raise HTTPException(
+    #        status_code=400,
+    #        detail="This domain " + domain_name + " does not exists in the system",
+    #    )
+    #print(domain_user_in)
+    current_user_domain = crud.domain_user.get_current_user_domain(db, user_id=current_user.id)
+    tag_in = Tags(name = tag_name, domain = current_user_domain.id)
+    tags = crud.tags.create(db, obj_in=tag_in)
+    return tags
+
+
 @router.get("/domain-tags", response_model=List[Tags])
 def get_tags(
         *,
         db: Session = Depends(deps.get_db),
         current_user: models.User = Depends(deps.get_current_user),
-        domain_name: str,
 ) -> Any:
     """
-    Get all tags for user
+    Get all tags for the deomain in which user is logged in
     """
-    tags = crud.tags.get_tags_for_domain()
+    domain = crud.domain_user.get_current_user_domain(db, user_id = current_user.id)
+    tags = crud.tags.get_tags_for_domain(db, domain_id = domain.id)
     if not tags:
         raise HTTPException(
             status_code=400,
-            detail="This domain " + domain_name + " does not exist"
+            detail="No tags to show."
         )
+    #no list in return?
     return tags
 
+@router.delete("/")
+def delete_tag(
+        current_user: models.User = Depends(deps.get_current_user),
+        db: Session = Depends(deps.get_db),
+        tag_id: int = Body(...),
+) -> None:
+    """
+    Deleting a single tag
+    """
+    try:
+        crud.tags.delete_tag_by_id(db, tag_id = tag_id)
+    except Exception as err:
+        raise HTTPException(
+            status_code=500, detail="Error"
+        )
 
 @router.get("/domain-configuration", response_model=DomainConfiguration)
 def get_domain_configuration(

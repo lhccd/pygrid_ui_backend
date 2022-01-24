@@ -1,3 +1,6 @@
+import uuid
+from uuid import UUID
+
 from typing import Any, Dict, Optional, Union
 
 from sqlalchemy.orm import Session
@@ -12,6 +15,9 @@ from app.schemas.domain_user import DomainUserBase, DomainUserCreate, DomainUser
 class CRUDDomain(CRUDBase[Domain, DomainCreate, DomainUpdate]):
     def get_by_name(self, db: Session, *, name: str) -> Optional[Domain]:
         return db.query(Domain).filter(Domain.name == name).first()
+
+    def get_by_id(self, db: Session, *, id: uuid.UUID) -> Optional[Domain]:
+        return db.query(Domain).filter(Domain.id == id).first()
 
     def create(self, db: Session, *, obj_in: DomainCreate) -> Domain:
         db_obj = Domain(

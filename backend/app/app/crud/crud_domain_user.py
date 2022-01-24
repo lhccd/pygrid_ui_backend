@@ -1,4 +1,6 @@
 import uuid
+from uuid import UUID
+
 from typing import Any, Dict, Optional, Union
 
 from pydantic import EmailStr
@@ -6,6 +8,7 @@ from sqlalchemy.orm import Session
 
 from app.crud.base import CRUDBase
 from app.models.domain_user import Domain_User
+from app.models.domain import Domain
 from app.schemas.domain_user import DomainUserBase, DomainUserCreate, DomainUserUpdate
 from app import crud
 
@@ -44,6 +47,10 @@ class CRUDDomainUser(CRUDBase[Domain_User, DomainUserCreate, DomainUserUpdate]):
             users.append(crud.user.get_by_id(db, id=u.user))
         return users
 
+    def get_current_user_domain(self, db: Session, *, user_id: uuid.UUID) -> Optional[Domain]:
+        domain_users = db.query(Domain_User).filter(Domain_User.user == user_id).first()
+        domain = crud.domain.get_by_id(db=db, id=domain_users.domain)
+        return domain
 
     def get_owner(self, db: Session, *, domain_name: str):
         """
