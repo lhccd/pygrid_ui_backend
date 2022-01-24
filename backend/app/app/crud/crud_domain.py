@@ -2,9 +2,11 @@ from typing import Any, Dict, Optional, Union
 
 from sqlalchemy.orm import Session
 
+from app import crud
 from app.crud.base import CRUDBase
 from app.models.domain import Domain
 from app.schemas.domain import DomainBase, DomainCreate, DomainUpdate, DomainConfiguration
+from app.schemas.domain_user import DomainUserBase, DomainUserCreate, DomainUserUpdate
 
 
 class CRUDDomain(CRUDBase[Domain, DomainCreate, DomainUpdate]):
@@ -27,8 +29,14 @@ class CRUDDomain(CRUDBase[Domain, DomainCreate, DomainUpdate]):
         db.refresh(db_obj)
         return db_obj
 
-    def get_domains(self, db: Session, *, skip: int = 0, limit: int = 100):
-        return db.query(Domain).offset(skip).limit(limit).all()
+    def add_user(self, db: Session, *, obj_in: DomainUserCreate):
+        return crud.domain_user.create(db, obj_in=obj_in)
+
+    def get_domains(self, db: Session):
+        return db.query(Domain).all()
+
+    def get_users(self, db: Session, *, domain_name: str):
+        return crud.domain_user.get_users_of_domain(db, domain_name=domain_name)
 
     def delete_domain(self):
         # TODO: DELETE A DOMAIN

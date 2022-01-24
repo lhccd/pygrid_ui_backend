@@ -23,3 +23,16 @@ class DomainUserUpdate(DomainUserBase):
     user: Optional[uuid.UUID]
     domain: Optional[uuid.UUID]
     role: Optional[int]
+
+
+class DomainUserDB(DomainUserBase):
+    id: Optional[int]
+
+    class Config:
+        orm_mode = True
+
+
+class DomainUser(DomainUserDB):
+    user: Optional[uuid.UUID]
+    domain: Optional[uuid.UUID]
+    role: Optional[int]

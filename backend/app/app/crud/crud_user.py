@@ -1,3 +1,4 @@
+import uuid
 from typing import Any, Dict, Optional, Union
 from uuid import UUID
 
@@ -13,6 +14,9 @@ from app.schemas.user import UserCreate, UserUpdate, UserProfile, UserBudget
 class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
     def get_by_email(self, db: Session, *, email: str) -> Optional[User]:
         return db.query(User).filter(User.email == email).first()
+
+    def get_by_id(self, db: Session, *, id: uuid.UUID) -> Optional[User]:
+        return db.query(User).filter(User.id == id).first()
 
     def create(self, db: Session, *, obj_in: UserCreate) -> User:
         db_obj = User(

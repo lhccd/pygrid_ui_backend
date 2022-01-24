@@ -10,7 +10,9 @@ from app import crud, models, schemas
 from app.api import deps
 from ....schemas.domain import Domain, DomainCreate, DomainProfile, DomainConfiguration
 from ....schemas.tags import Tags
-from ....schemas.user import UserDetail
+from ....schemas.user import UserDetail, User
+from ....schemas.domain_user import DomainUserCreate, DomainUser
+from pydantic.networks import EmailStr
 
 router = APIRouter()
 
@@ -46,6 +48,42 @@ def create_domain(
     return domain
 
 
+@router.post("/add-user", response_model=DomainUser)
+def add_user_to_domain(
+        *,
+        db: Session = Depends(deps.get_db),
+        current_user: models.User = Depends(deps.get_current_user),
+        domain_name: str = Body(...),
+        user_email: EmailStr = Body(...),
+        role: int = Body(...)
+) -> Any:
+    """
+    Add a user into already created domain
+    """
+    domain = crud.domain.get_by_name(db, name=domain_name)
+    if not domain:
+        raise HTTPException(
+            status_code=400,
+            detail="This domain " + domain_name + " does not exists in the system",
+        )
+    user = crud.user.get_by_email(db, email=user_email)
+    if not user:
+        raise HTTPException(
+            status_code=404,
+            detail="User not found"
+        )
+    existing_domain_user = crud.domain_user.get_user(db, domain_name=domain_name, user_email=user_email)
+    if existing_domain_user:
+        raise HTTPException(
+            status_code=400,
+            detail="This is user already in this domain"
+        )
+    domain_user_in = DomainUserCreate(user=user.id, domain=domain.id, role=role)
+    print(domain_user_in)
+    domain_user = crud.domain_user.create(db, obj_in=domain_user_in)
+    return domain_user
+
+
 @router.get("/domains", response_model=List[Domain])
 def get_all_domains(
         *,
@@ -57,6 +95,25 @@ def get_all_domains(
     """
     domains = crud.domain.get_domains(db)
     return domains
+
+
+@router.get("/domain-users", response_model=List[User])
+def get_users_of_domain(
+        *,
+        db: Session = Depends(deps.get_db),
+        current_user: models.User = Depends(deps.get_current_user),
+        domain_name: str,
+) -> Any:
+    """
+    Get users of a specific domain
+    """
+    domain = crud.domain.get_by_name(db, name=domain_name)
+    if not domain:
+        raise HTTPException(
+            status_code=400,
+            detail="This domain " + domain_name + " does not exist",
+        )
+    return crud.domain.get_users(db, domain_name=domain_name)
 
 
 @router.get("/domain-profile", response_model=DomainProfile)
