@@ -38,6 +38,10 @@ class CRUDDomainUser(CRUDBase[Domain_User, DomainUserCreate, DomainUserUpdate]):
         # TODO: GET User Role by domain name and user email, return None if user is not in the domain
         pass
 
+    def get_domain_owner_role(self, db: Session, *, domain_name: str):
+        domain_user_owner = db.query(Domain_User).filter(Domain_User.role == 2).first()
+        return domain_user_owner
+
     def get_users_of_domain(self, db: Session, *, domain_name: str):
         domain = crud.domain.get_by_name(db=db, name=domain_name)
         #return db.query(Domain_User).filter(Domain_User.domain == domain.id).all()
@@ -55,11 +59,12 @@ class CRUDDomainUser(CRUDBase[Domain_User, DomainUserCreate, DomainUserUpdate]):
 
     def get_owner(self, db: Session, *, domain_name: str):
         """
-        GET owner of the domain, return a user detail so that we can now user's name
+        GET owner of the domain, return a user detail so that we can know user's name
         """
-        users = self.get_users_of_domain(db, domain_name=domain_name)
-        print(users)
-        #return users.filter(Domain_User.Role == 1).first()  # find the user
+        domain_user_owner = self.get_domain_owner_role(db, domain_name=domain_name)
+        print(domain_user_owner.user)
+        owner = crud.user.get_by_id(db=db, id=domain_user_owner.user)
+        return owner
 
 
 domain_user = CRUDDomainUser(Domain_User)

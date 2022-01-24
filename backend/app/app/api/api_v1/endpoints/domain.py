@@ -116,7 +116,7 @@ def get_users_of_domain(
     return crud.domain.get_users(db, domain_name=domain_name)
 
 
-@router.get("/domain-profile", response_model=DomainProfile)
+@router.get("/domain-profile")
 def get_domain_profile(
         *,
         db: Session = Depends(deps.get_db),
@@ -127,12 +127,16 @@ def get_domain_profile(
     Get a specific domain by domain name
     """
     domain = crud.domain.get_by_name(db, name=domain_name)
+    owner = crud.domain_user.get_owner(db, domain_name=domain_name)
+    list = []
+    list.append(domain)
+    list.append(owner)
     if not domain:
         raise HTTPException(
             status_code=400,
             detail="This domain " + domain_name + " does not exist",
         )
-    return domain
+    return list
 
 
 @router.get("/domain-owner", response_model=UserDetail)
@@ -196,11 +200,11 @@ def get_tags(
     #no list in return?
     return tags
 
-@router.delete("/")
+@router.delete("/{tag_id}")
 def delete_tag(
+        tag_id: int,
         current_user: models.User = Depends(deps.get_current_user),
         db: Session = Depends(deps.get_db),
-        tag_id: int = Body(...),
 ) -> None:
     """
     Deleting a single tag
@@ -265,6 +269,28 @@ def update_domain(
     """
     domain = crud.domain.get_by_name(db, name=domain_name)
     domain_in = DomainUpdate(repository = repository, branch = branch, commit_hash = commit_hash, last_updated = last_updated)
+    if not domain:
+        raise HTTPException(
+            status_code=400,
+            detail="The domain does not exist in the system",
+        )
+    domain = crud.domain.update_version(db, db_obj=domain, obj_in=domain_in)
+    return domain
+
+@router.put("/update-domain-settings", response_model=DomainProfile)
+def update_domain_settings(
+        *,
+        db: Session = Depends(deps.get_db),
+        current_user: models.User = Depends(deps.get_current_user),
+        domain_name: str,
+        description: str = Body(...),
+        support_email: str = Body(...),
+) -> Any:
+    """
+    Update domain's settings
+    """
+    domain = crud.domain.get_by_name(db, name=domain_name)
+    domain_in = DomainUpdate(description = description, support_email = support_email)
     if not domain:
         raise HTTPException(
             status_code=400,
