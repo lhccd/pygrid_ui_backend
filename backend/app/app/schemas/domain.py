@@ -11,6 +11,7 @@ class DomainBase(BaseModel):
 
 class DomainCreate(DomainBase):
     deployed_on: Optional[datetime]
+    last_updated: Optional[datetime]
     description: Optional[str] = None
     support_email: Optional[str] = None
     version_name: Optional[str] = None

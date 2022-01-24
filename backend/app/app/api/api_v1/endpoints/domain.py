@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from app import crud, models, schemas
 from app.api import deps
-from ....schemas.domain import Domain, DomainCreate, DomainProfile, DomainConfiguration, DomainUpdateVersion
+from ....schemas.domain import Domain, DomainCreate, DomainUpdate, DomainProfile, DomainConfiguration, DomainUpdateVersion
 from ....schemas.tags import Tags
 from ....schemas.user import UserDetail, User
 from ....schemas.domain_user import DomainUserCreate, DomainUser
@@ -164,16 +164,14 @@ def add_tags_to_domain(
     """
     Add a tag to the domain
     """
-    # if tag is not in the list - add it
-
-    #domain = crud.domain.get_by_name(db, name=domain_name)
-    #if not domain:
-    #    raise HTTPException(
-    #        status_code=400,
-    #        detail="This domain " + domain_name + " does not exists in the system",
-    #    )
-    #print(domain_user_in)
     current_user_domain = crud.domain_user.get_current_user_domain(db, user_id=current_user.id)
+    tags = crud.tags.get_tags_for_domain(db, domain_id = current_user_domain.id)
+    for tag in tags:
+        if tag.name == tag_name:
+            raise HTTPException(
+                status_code=400,
+                detail="This tag already exists.",
+            )
     tag_in = Tags(name = tag_name, domain = current_user_domain.id)
     tags = crud.tags.create(db, obj_in=tag_in)
     return tags
@@ -251,6 +249,29 @@ def get_domain_version(
         )
     return domain
 
+@router.put("/update-domain-version", response_model=DomainUpdateVersion)
+def update_domain(
+        *,
+        db: Session = Depends(deps.get_db),
+        current_user: models.User = Depends(deps.get_current_user),
+        last_updated: datetime = datetime.now(),
+        domain_name: str,
+        repository: str = Body(...),
+        branch: str = Body(...),
+        commit_hash: str = Body(...),
+) -> Any:
+    """
+    Update a domain's version
+    """
+    domain = crud.domain.get_by_name(db, name=domain_name)
+    domain_in = DomainUpdate(repository = repository, branch = branch, commit_hash = commit_hash, last_updated = last_updated)
+    if not domain:
+        raise HTTPException(
+            status_code=400,
+            detail="The domain does not exist in the system",
+        )
+    domain = crud.domain.update_version(db, db_obj=domain, obj_in=domain_in)
+    return domain
 
 @router.delete("/delete")
 def delete_domain(

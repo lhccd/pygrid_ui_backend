@@ -48,6 +48,7 @@ class CRUDDomainUser(CRUDBase[Domain_User, DomainUserCreate, DomainUserUpdate]):
         return users
 
     def get_current_user_domain(self, db: Session, *, user_id: uuid.UUID) -> Optional[Domain]:
+        # assumption - user belongs to just one domain
         domain_users = db.query(Domain_User).filter(Domain_User.user == user_id).first()
         domain = crud.domain.get_by_id(db=db, id=domain_users.domain)
         return domain

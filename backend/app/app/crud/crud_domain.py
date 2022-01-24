@@ -44,6 +44,13 @@ class CRUDDomain(CRUDBase[Domain, DomainCreate, DomainUpdate]):
     def get_users(self, db: Session, *, domain_name: str):
         return crud.domain_user.get_users_of_domain(db, domain_name=domain_name)
 
+    def update_version(self, db: Session, *, db_obj: Domain, obj_in: DomainUpdate) -> Domain:
+        if isinstance(obj_in, dict):
+            update_data = obj_in
+        else:
+            update_data = obj_in.dict(exclude_unset=True)
+        return super().update(db, db_obj=db_obj, obj_in=update_data)
+
     def delete_domain(self):
         # TODO: DELETE A DOMAIN
         pass

@@ -36,5 +36,7 @@ class CRUDTags(CRUDBase[Tags, TagCreate, TagUpdate]):
         db.query(Tags).filter(Tags.id == tag_id).delete()
         db.commit()
 
+    def update_tag_by_id():
+        pass
 
 tags = CRUDTags(Tags)

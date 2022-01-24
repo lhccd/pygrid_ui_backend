@@ -187,13 +187,12 @@ def update_user(
 def update_budget(
         *,
         db: Session = Depends(deps.get_db),
-        #Check if current user has permissions?
         current_user: models.User = Depends(deps.get_current_user),
         user_email: EmailStr,
         budget: float = Body(...),
 ) -> Any:
     """
-    Update a user.
+    Update a user's budget.
     """
     user = crud.user.get_by_email(db, email=user_email)
     user_in = UserBudget(budget=budget)
