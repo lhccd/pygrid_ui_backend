@@ -1,27 +1,32 @@
+import base64
 import io
 import uuid
 from datetime import datetime
 from typing import Any, List
 
-from fastapi import APIRouter, Body, Depends, HTTPException, File, UploadFile
+from fastapi import APIRouter, Body, Depends, HTTPException, File, UploadFile, Response
+from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session
 
 from app import crud, models, schemas
 from app.api import deps
-from ....schemas.domain import Domain, DomainCreate, DomainUpdate, DomainProfile, DomainConfiguration, DomainUpdateVersion
+from starlette.responses import StreamingResponse, PlainTextResponse
+
+from ....schemas.domain import Domain, DomainCreate, DomainUpdate, DomainProfile, DomainConfiguration, \
+    DomainUpdateVersion
 from ....schemas.tags import Tags
 from ....schemas.user import UserDetail, User
 from ....schemas.domain_user import DomainUserCreate, DomainUser
 from pydantic.networks import EmailStr
+from fastapi.responses import FileResponse
 
 router = APIRouter()
 
 
 @router.post("/create-domain", response_model=Domain)
-def create_domain(
+async def create_domain(
         *,
         db: Session = Depends(deps.get_db),
-        current_user: models.User = Depends(deps.get_current_user),
         name=Body(...),
         description=Body(...),
         support_email=Body(...),
@@ -29,6 +34,7 @@ def create_domain(
         repository=Body(...),
         branch=Body(...),
         commit_hash=Body(...),
+        daa_pdf: UploadFile = File(...),
 ) -> Any:
     """
     Create a domain
@@ -39,10 +45,12 @@ def create_domain(
             status_code=400,
             detail="This domain " + name + " already exists in the system",
         )
+    pdf_file = await daa_pdf.read()
+    pdf_obj = models.pdf.PDFObject(binary=pdf_file)
     domain_in = schemas.DomainCreate(
         name=name, deployed_on=datetime.now(), description=description, support_email=support_email,
         version_name=version_name,
-        repository=repository, branch=branch, commit_hash=commit_hash
+        repository=repository, branch=branch, commit_hash=commit_hash, pdf_daa=pdf_obj.binary
     )
     domain = crud.domain.create(db, obj_in=domain_in)
     return domain
@@ -116,7 +124,7 @@ def get_users_of_domain(
     return crud.domain.get_users(db, domain_name=domain_name)
 
 
-@router.get("/domain-profile")
+@router.get("/domain-profile", response_model=DomainProfile)
 def get_domain_profile(
         *,
         db: Session = Depends(deps.get_db),
@@ -126,6 +134,23 @@ def get_domain_profile(
     """
     Get a specific domain by domain name
     """
+    domain = crud.domain.get_by_name(db, name=domain_name)
+    if not domain:
+        raise HTTPException(
+            status_code=400,
+            detail="This domain " + domain_name + " does not exist",
+        )
+    return domain
+
+
+"""
+@router.get("/domain-profile")
+def get_domain_profile(
+        *,
+        db: Session = Depends(deps.get_db),
+        current_user: models.User = Depends(deps.get_current_user),
+        domain_name: str,
+) -> Any:
     domain = crud.domain.get_by_name(db, name=domain_name)
     owner = crud.domain_user.get_owner(db, domain_name=domain_name)
     list = []
@@ -137,6 +162,33 @@ def get_domain_profile(
             detail="This domain " + domain_name + " does not exist",
         )
     return list
+"""
+
+
+@router.get("/domain-pdf")
+def get_domain_pdf(
+        *,
+        db: Session = Depends(deps.get_db),
+        domain_name: str,
+) -> Any:
+    """
+    Get the Daa Agreement Of the Domain
+    """
+    domain = crud.domain.get_by_name(db, name=domain_name)
+    if not domain:
+        raise HTTPException(
+            status_code=400,
+            detail="This domain " + domain_name + " does not exist",
+        )
+    pdf_id = domain.pdf_daa_id
+    pdf_obj = crud.domain.get_domain_pdf(db, pdf_id=pdf_id)
+    json_compatible_item_data = jsonable_encoder(pdf_obj.binary, custom_encoder={
+        bytes: lambda v: base64.b64encode(v).decode('utf-8')})
+    #pdf_path = './' + domain_name + '_DAA.pdf'
+    #outfile = open(pdf_path, 'wb')
+    #outfile.write(pdf_obj.binary)
+    #outfile.close()
+    return json_compatible_item_data
 
 
 @router.get("/domain-owner", response_model=UserDetail)
@@ -169,14 +221,14 @@ def add_tags_to_domain(
     Add a tag to the domain
     """
     current_user_domain = crud.domain_user.get_current_user_domain(db, user_id=current_user.id)
-    tags = crud.tags.get_tags_for_domain(db, domain_id = current_user_domain.id)
+    tags = crud.tags.get_tags_for_domain(db, domain_id=current_user_domain.id)
     for tag in tags:
         if tag.name == tag_name:
             raise HTTPException(
                 status_code=400,
                 detail="This tag already exists.",
             )
-    tag_in = Tags(name = tag_name, domain = current_user_domain.id)
+    tag_in = Tags(name=tag_name, domain=current_user_domain.id)
     tags = crud.tags.create(db, obj_in=tag_in)
     return tags
 
@@ -190,15 +242,16 @@ def get_tags(
     """
     Get all tags for the deomain in which user is logged in
     """
-    domain = crud.domain_user.get_current_user_domain(db, user_id = current_user.id)
-    tags = crud.tags.get_tags_for_domain(db, domain_id = domain.id)
+    domain = crud.domain_user.get_current_user_domain(db, user_id=current_user.id)
+    tags = crud.tags.get_tags_for_domain(db, domain_id=domain.id)
     if not tags:
         raise HTTPException(
             status_code=400,
             detail="No tags to show."
         )
-    #no list in return?
+    # no list in return?
     return tags
+
 
 @router.delete("/{tag_id}")
 def delete_tag(
@@ -210,11 +263,12 @@ def delete_tag(
     Deleting a single tag
     """
     try:
-        crud.tags.delete_tag_by_id(db, tag_id = tag_id)
+        crud.tags.delete_tag_by_id(db, tag_id=tag_id)
     except Exception as err:
         raise HTTPException(
             status_code=500, detail="Error"
         )
+
 
 @router.get("/domain-configuration", response_model=DomainConfiguration)
 def get_domain_configuration(
@@ -253,6 +307,7 @@ def get_domain_version(
         )
     return domain
 
+
 @router.put("/update-domain-version", response_model=DomainUpdateVersion)
 def update_domain(
         *,
@@ -268,7 +323,7 @@ def update_domain(
     Update a domain's version
     """
     domain = crud.domain.get_by_name(db, name=domain_name)
-    domain_in = DomainUpdate(repository = repository, branch = branch, commit_hash = commit_hash, last_updated = last_updated)
+    domain_in = DomainUpdate(repository=repository, branch=branch, commit_hash=commit_hash, last_updated=last_updated)
     if not domain:
         raise HTTPException(
             status_code=400,
@@ -276,6 +331,7 @@ def update_domain(
         )
     domain = crud.domain.update_version(db, db_obj=domain, obj_in=domain_in)
     return domain
+
 
 @router.put("/update-domain-settings", response_model=DomainProfile)
 def update_domain_settings(
@@ -290,7 +346,7 @@ def update_domain_settings(
     Update domain's settings
     """
     domain = crud.domain.get_by_name(db, name=domain_name)
-    domain_in = DomainUpdate(description = description, support_email = support_email)
+    domain_in = DomainUpdate(description=description, support_email=support_email)
     if not domain:
         raise HTTPException(
             status_code=400,
@@ -298,6 +354,7 @@ def update_domain_settings(
         )
     domain = crud.domain.update_version(db, db_obj=domain, obj_in=domain_in)
     return domain
+
 
 @router.delete("/delete")
 def delete_domain(

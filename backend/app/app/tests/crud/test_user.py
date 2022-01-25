@@ -89,10 +89,12 @@ def test_update_profile(db: Session) -> None:
     print(user)
     crud.user.update_profile(db=db, db_obj=user, obj_in=user_obj)
 
+
 def test_get_pdf(db: Session) -> None:
-    password = "2435"
-    username = "example2@e.c"
-    pdf = crud.user.get_pdf_by_email(db, email=username)
+    #password = "2435"
+    #username = "example2@e.c"
+    #pdf = crud.user.get_pdf_by_email(db, email=username)
+    pdf = crud.domain.get_domain_pdf(db, pdf_id=20)
 
 def test_get_user(db: Session) -> None:
     username = "a@a.c"

@@ -18,6 +18,7 @@ class DomainCreate(DomainBase):
     repository: Optional[str] = None
     branch: Optional[str] = None
     commit_hash: Optional[str] = None
+    pdf_daa: Optional[bytes] = None
 
 
 class DomainUpdate(DomainCreate):
@@ -34,6 +35,7 @@ class DomainInDBBase(DomainBase):
 # Additional properties to return via API
 class Domain(DomainInDBBase):
     name: str
+    pdf_daa_id: Optional[int] = None
     pass
 
 

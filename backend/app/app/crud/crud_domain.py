@@ -1,3 +1,4 @@
+import base64
 import uuid
 from uuid import UUID
 
@@ -11,6 +12,8 @@ from app.models.domain import Domain
 from app.schemas.domain import DomainBase, DomainCreate, DomainUpdate, DomainConfiguration
 from app.schemas.domain_user import DomainUserBase, DomainUserCreate, DomainUserUpdate
 
+from app.models.pdf import PDFObject
+
 
 class CRUDDomain(CRUDBase[Domain, DomainCreate, DomainUpdate]):
     def get_by_name(self, db: Session, *, name: str) -> Optional[Domain]:
@@ -20,6 +23,10 @@ class CRUDDomain(CRUDBase[Domain, DomainCreate, DomainUpdate]):
         return db.query(Domain).filter(Domain.id == id).first()
 
     def create(self, db: Session, *, obj_in: DomainCreate) -> Domain:
+        _pdf_obj = PDFObject(binary=obj_in.pdf_daa)
+        db.add(_pdf_obj)
+        db.commit()
+        db.refresh(_pdf_obj)
         db_obj = Domain(
             name=obj_in.name,
             deployed_on=obj_in.deployed_on,
@@ -28,7 +35,8 @@ class CRUDDomain(CRUDBase[Domain, DomainCreate, DomainUpdate]):
             version_name=obj_in.version_name,
             repository=obj_in.repository,
             branch=obj_in.branch,
-            commit_hash=obj_in.commit_hash
+            commit_hash=obj_in.commit_hash,
+            pdf_daa_id=_pdf_obj.id
         )
         db.add(db_obj)
         db.commit()
@@ -50,6 +58,13 @@ class CRUDDomain(CRUDBase[Domain, DomainCreate, DomainUpdate]):
         else:
             update_data = obj_in.dict(exclude_unset=True)
         return super().update(db, db_obj=db_obj, obj_in=update_data)
+
+
+    def get_domain_pdf(self, db: Session, *, pdf_id: int) -> Optional[PDFObject]:
+        return db.query(PDFObject).filter(PDFObject.id == pdf_id).first()
+        #outfile = open('./test.pdf', 'wb')
+        #outfile.write(obj.binary)
+        #outfile.close()
 
     def delete_domain(self):
         # TODO: DELETE A DOMAIN
