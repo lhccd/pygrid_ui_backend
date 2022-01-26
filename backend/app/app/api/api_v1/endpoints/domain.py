@@ -13,7 +13,7 @@ from app.api import deps
 from starlette.responses import StreamingResponse, PlainTextResponse
 
 from ....schemas.domain import Domain, DomainCreate, DomainUpdate, DomainProfile, DomainConfiguration, \
-    DomainUpdateVersion
+    DomainUpdateVersion, DomainMetadata
 from ....schemas.tags import Tags
 from ....schemas.user import UserDetail, User
 from ....schemas.domain_user import DomainUserCreate, DomainUser
@@ -372,3 +372,21 @@ def delete_domain(
         raise HTTPException(
             status_code=500, detail="Error"
         )
+
+@router.get("/domain-metadata", response_model=DomainMetadata)
+def get_domain_metadata(
+        *,
+        db: Session = Depends(deps.get_db),
+        current_user: models.User = Depends(deps.get_current_user),
+        domain_name: str,
+) -> Any:
+    """
+    Get a domain metadata
+    """
+    domain = crud.domain.get_by_name(db, name=domain_name)
+    if not domain:
+        raise HTTPException(
+            status_code=400,
+            detail="This domain " + domain_name + " does not exist",
+        )
+    return domain
