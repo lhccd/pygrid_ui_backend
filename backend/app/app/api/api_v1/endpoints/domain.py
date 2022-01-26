@@ -240,7 +240,7 @@ def get_tags(
         current_user: models.User = Depends(deps.get_current_user),
 ) -> Any:
     """
-    Get all tags for the deomain in which user is logged in
+    Get all tags for the domain in which user is logged in
     """
     domain = crud.domain_user.get_current_user_domain(db, user_id=current_user.id)
     tags = crud.tags.get_tags_for_domain(db, domain_id=domain.id)
@@ -249,7 +249,26 @@ def get_tags(
             status_code=400,
             detail="No tags to show."
         )
-    # no list in return?
+    return tags
+
+@router.get("/domain-tags-open", response_model=List[Tags])
+def get_tags(
+        *,
+        db: Session = Depends(deps.get_db),
+        #current_user: models.User = Depends(deps.get_current_user),
+        domain_name: str,
+) -> Any:
+    """
+    Get all tags for the domain.
+    """
+    #domain = crud.domain_user.get_current_user_domain(db, user_id=current_user.id)
+    domain = crud.domain.get_by_name(db, name=domain_name)
+    tags = crud.tags.get_tags_for_domain(db, domain_id=domain.id)
+    if not tags:
+        raise HTTPException(
+            status_code=400,
+            detail="No tags to show."
+        )
     return tags
 
 
