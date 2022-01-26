@@ -16,6 +16,7 @@ class User(Base):
     #inserted new columns
     name = Column(String(255), default="")
     budget = Column(Float(), default=0.0)
+    allocated_budget = Column(Float(), default=0.0)
     salt = Column(String(255))
     private_key = Column(String(2048))
     verify_key = Column(String(2048))
