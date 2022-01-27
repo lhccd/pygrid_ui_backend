@@ -36,6 +36,11 @@ class CRUDTags(CRUDBase[Tags, TagCreate, TagUpdate]):
         db.query(Tags).filter(Tags.id == tag_id).delete()
         db.commit()
 
+    def delete_all_from_domain(self, db: Session, *, domain_id  = uuid.UUID):
+        db.query(Tags).filter(Tags.domain == domain_id).delete()
+        db.commit()
+
+
     def update_tag_by_id():
         pass
 

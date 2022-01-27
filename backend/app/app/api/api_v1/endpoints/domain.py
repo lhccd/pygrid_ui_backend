@@ -210,27 +210,33 @@ def get_domain_owner(
     return domain_user
 
 
-@router.post("/add-tags", response_model=Tags)
+@router.put("/add-tags", response_model=List[Tags])
 def add_tags_to_domain(
         *,
         db: Session = Depends(deps.get_db),
         current_user: models.User = Depends(deps.get_current_user),
-        tag_name: str = Body(...),
+        tags: List[str] = Body(...),
 ) -> Any:
     """
-    Add a tag to the domain
+        Add a tag to the domain
     """
     current_user_domain = crud.domain_user.get_current_user_domain(db, user_id=current_user.id)
-    tags = crud.tags.get_tags_for_domain(db, domain_id=current_user_domain.id)
+    #tags = crud.tags.get_tags_for_domain(db, domain_id=current_user_domain.id)
+    crud.tags.delete_all_from_domain(db, domain_id=current_user_domain.id)
+
+    #for tag in tags:
+    #    if tag.name == tag_name:
+    #        raise HTTPException(
+    #            status_code=400,
+    #            detail="This tag already exists.",
+    #        )
+    result = []
     for tag in tags:
-        if tag.name == tag_name:
-            raise HTTPException(
-                status_code=400,
-                detail="This tag already exists.",
-            )
-    tag_in = Tags(name=tag_name, domain=current_user_domain.id)
-    tags = crud.tags.create(db, obj_in=tag_in)
-    return tags
+        tag_in = Tags(name=tag, domain=current_user_domain.id)
+        result.append(crud.tags.create(db, obj_in=tag_in))
+    return result
+
+
 
 
 @router.get("/domain-tags", response_model=List[Tags])
@@ -396,7 +402,6 @@ def delete_domain(
 def get_domain_metadata(
         *,
         db: Session = Depends(deps.get_db),
-        current_user: models.User = Depends(deps.get_current_user),
         domain_name: str,
 ) -> Any:
     """
