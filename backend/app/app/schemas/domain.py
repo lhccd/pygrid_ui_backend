@@ -58,8 +58,3 @@ class DomainUpdateVersion(DomainInDBBase):
     repository: Optional[str] = None
     branch: Optional[str] = None
     commit_hash: Optional[str] = None
-
-class DomainMetadata(DomainInDBBase):
-    id: Optional[uuid.UUID]
-    name: Optional[str]
-    deployed_on: Optional[datetime]

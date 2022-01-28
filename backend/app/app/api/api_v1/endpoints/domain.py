@@ -12,8 +12,7 @@ from app import crud, models, schemas
 from app.api import deps
 from starlette.responses import StreamingResponse, PlainTextResponse
 
-from ....schemas.domain import Domain, DomainCreate, DomainUpdate, DomainProfile, DomainConfiguration, \
-    DomainUpdateVersion, DomainMetadata
+from ....schemas.domain import Domain, DomainCreate, DomainUpdate, DomainProfile, DomainConfiguration, DomainUpdateVersion
 from ....schemas.tags import Tags
 from ....schemas.user import UserDetail, User
 from ....schemas.domain_user import DomainUserCreate, DomainUser
@@ -87,7 +86,6 @@ def add_user_to_domain(
             detail="This is user already in this domain"
         )
     domain_user_in = DomainUserCreate(user=user.id, domain=domain.id, role=role)
-    print(domain_user_in)
     domain_user = crud.domain_user.create(db, obj_in=domain_user_in)
     return domain_user
 
@@ -128,7 +126,6 @@ def get_users_of_domain(
 def get_domain_profile(
         *,
         db: Session = Depends(deps.get_db),
-        current_user: models.User = Depends(deps.get_current_user),
         domain_name: str,
 ) -> Any:
     """
@@ -184,10 +181,6 @@ def get_domain_pdf(
     pdf_obj = crud.domain.get_domain_pdf(db, pdf_id=pdf_id)
     json_compatible_item_data = jsonable_encoder(pdf_obj.binary, custom_encoder={
         bytes: lambda v: base64.b64encode(v).decode('utf-8')})
-    #pdf_path = './' + domain_name + '_DAA.pdf'
-    #outfile = open(pdf_path, 'wb')
-    #outfile.write(pdf_obj.binary)
-    #outfile.close()
     return json_compatible_item_data
 
 
@@ -261,13 +254,11 @@ def get_tags(
 def get_tags(
         *,
         db: Session = Depends(deps.get_db),
-        #current_user: models.User = Depends(deps.get_current_user),
         domain_name: str,
 ) -> Any:
     """
     Get all tags for the domain.
     """
-    #domain = crud.domain_user.get_current_user_domain(db, user_id=current_user.id)
     domain = crud.domain.get_by_name(db, name=domain_name)
     tags = crud.tags.get_tags_for_domain(db, domain_id=domain.id)
     if not tags:
@@ -358,7 +349,7 @@ def update_domain(
     return domain
 
 
-@router.put("/update-domain-settings", response_model=DomainProfile)
+@router.put("/domain-profile", response_model=DomainProfile)
 def update_domain_settings(
         *,
         db: Session = Depends(deps.get_db),
@@ -397,20 +388,3 @@ def delete_domain(
         raise HTTPException(
             status_code=500, detail="Error"
         )
-
-@router.get("/domain-metadata", response_model=DomainMetadata)
-def get_domain_metadata(
-        *,
-        db: Session = Depends(deps.get_db),
-        domain_name: str,
-) -> Any:
-    """
-    Get a domain metadata
-    """
-    domain = crud.domain.get_by_name(db, name=domain_name)
-    if not domain:
-        raise HTTPException(
-            status_code=400,
-            detail="This domain " + domain_name + " does not exist",
-        )
-    return domain

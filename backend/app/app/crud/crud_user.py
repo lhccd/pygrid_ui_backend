@@ -119,8 +119,8 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         return user.status == "accepted"
 
     def get_pdf_by_email(self, db: Session, *, email: str) -> Optional[PDFObject]:
-        user = db.query(User).filter(User.email == email).first()
-        pdf_id = user.daa_pdf
+        pdf_user = db.query(User).filter(User.email == email).first()
+        pdf_id = pdf_user.daa_pdf
         return db.query(PDFObject).filter(PDFObject.id == pdf_id).first()
 
     def get_users_by_status(self, db: Session, *, skip: int = 0, limit: int = 100, status: str = "accepted"):

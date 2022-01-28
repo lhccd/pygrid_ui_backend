@@ -1,3 +1,4 @@
+import base64
 import io
 import uuid
 from datetime import datetime
@@ -100,7 +101,7 @@ def get_user_by_id(
     return user
 
 
-@router.get("/user-daa", responses={200: {"content": {"application/pdf": {}}}})
+@router.get("/user-pdf")
 def get_user_daa_by_id(
         *,
         db: Session = Depends(deps.get_db),
@@ -108,8 +109,9 @@ def get_user_daa_by_id(
         current_user: models.User = Depends(deps.get_current_user)
 ) -> Any:
     pdf_obj = crud.user.get_pdf_by_email(db, email=user_email)
-
-    return StreamingResponse(io.BytesIO(pdf_obj.binary), media_type="application/pdf")
+    json_compatible_item_data = jsonable_encoder(pdf_obj.binary, custom_encoder={
+        bytes: lambda v: base64.b64encode(v).decode('utf-8')})
+    return json_compatible_item_data
 
 
 @router.post("/open", response_model=schemas.User)
