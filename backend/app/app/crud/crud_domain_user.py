@@ -37,10 +37,6 @@ class CRUDDomainUser(CRUDBase[Domain_User, DomainUserCreate, DomainUserUpdate]):
         db.refresh(db_obj)
         return db_obj
 
-    def get_role(self, db: Session, *, domain_name: str, user_email):
-        # TODO: GET User Role by domain name and user email, return None if user is not in the domain
-        pass
-
     def get_domain_owner_role(self, db: Session, *, domain_name: str):
         domain_user_owner = db.query(Domain_User).filter(Domain_User.role == 2).first()
         return domain_user_owner

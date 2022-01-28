@@ -128,7 +128,6 @@ def get_users_of_domain(
 def get_domain_profile(
         *,
         db: Session = Depends(deps.get_db),
-        current_user: models.User = Depends(deps.get_current_user),
         domain_name: str,
 ) -> Any:
     """
