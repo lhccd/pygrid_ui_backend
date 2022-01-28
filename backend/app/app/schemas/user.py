@@ -73,6 +73,7 @@ class UserInDB(UserInDBBase):
 class ActiveUser(UserBase):
     id: Optional[uuid.UUID]
     budget: Optional[float] = None
+    allocated_budget: Optional[float] = None
     created_at: Optional[datetime] = None
     added_by: Optional[str] = None
 
