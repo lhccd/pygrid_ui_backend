@@ -14,7 +14,7 @@ from app import crud, models, schemas
 from starlette.responses import StreamingResponse
 
 from ....models.pdf import PDFObject
-from ....schemas.user import UserProfile, PendingUser, ActiveUser, DeniedUser, UserDetail, UserUpdate, UserBudget
+from ....schemas.user import UserProfile, PendingUser, ActiveUser, DeniedUser, UserDetail, UserUpdate, UserBudget, UserUpdateWithPassword
 from app.api import deps
 from app.core.config import settings
 from app.utils import send_new_account_email
@@ -28,18 +28,26 @@ def update_user_password(
         db: Session = Depends(deps.get_db),
         current_password: str = Body(None),
         password: str = Body(None),
+        full_name: str = Body(...),
+        website: str = Body(...),
+        email: EmailStr = Body(...),
+        institution: str = Body(...),
         current_user: models.User = Depends(deps.get_current_user),
 ) -> Any:
     """
     Update own user.
     """
     current_user_data = jsonable_encoder(current_user)
-    user_in = schemas.UserUpdate(**current_user_data)
+    user_in = schemas.UserUpdateWithPassword(**current_user_data)
     user = crud.user.authenticate(
         db, email=current_user.email, password=current_password
     )
     if user:
         user_in.password = password
+        user_in.full_name = full_name
+        user_in.website = website
+        user_in.email = email
+        user_in.institution = institution
     else:
         raise HTTPException(
             status_code=400,
@@ -86,7 +94,7 @@ def create_user_open(
         full_name: str = Body(...),
         website: str = Body(None),
         institution: str = Body(None),
-        budget: int = Body(None),
+        budget: float = Body(None),
 ) -> Any:
     """
     Create new user without daa requirement
@@ -103,7 +111,7 @@ def create_user_open(
             detail="The user with this username already exists in the system",
         )
     user_in = schemas.UserCreate(password=password, email=email, full_name=full_name, website=website,
-                                 institution=institution, budget=budget, created_at=datetime.now())
+                                 institution=institution, budget=budget, allocated_budget=budget, created_at=datetime.now())
     user = crud.user.create_with_no_daa(db, obj_in=user_in)
     return user
 
@@ -138,7 +146,7 @@ async def create_user_daa(
     pdf_obj = models.pdf.PDFObject(binary=pdf_file)
     user_in = schemas.UserCreate(password=password, email=email, full_name=full_name, daa_pdf=pdf_obj.binary,
                                  website=website,
-                                 institution=institution, budget=budget, created_at=datetime.now())
+                                 institution=institution, budget=budget, allocated_budget=budget, created_at=datetime.now())
     user = crud.user.create_with_daa(db, obj_in=user_in)
     return user
 

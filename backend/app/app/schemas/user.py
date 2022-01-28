@@ -20,6 +20,7 @@ class UserCreate(UserBase):
     website: Optional[str] = None
     institution: Optional[str] = None
     daa_pdf: Optional[bytes] = None
+    allocated_budget: Optional[float] = None
     budget: Optional[float] = None
     status: str = ""
     created_at: Optional[datetime]
@@ -92,3 +93,10 @@ class DeniedUser(PendingUser):
 
     class Config:
         orm_mode = True
+
+class UserUpdateWithPassword(UserBase):
+    full_name: Optional[str]
+    website: Optional[str]
+    email: Optional[EmailStr]
+    institution: Optional[str]
+    password: Optional[str] = None

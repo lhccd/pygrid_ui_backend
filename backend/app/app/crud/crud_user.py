@@ -44,7 +44,8 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
             full_name=obj_in.full_name,
             website=obj_in.website,
             institution=obj_in.institution,
-            budget=obj_in.budget,
+            budget=obj_in.allocated_budget,
+            allocated_budget=obj_in.budget,
             status="pending",
             created_at=obj_in.created_at
         )
@@ -65,6 +66,7 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
             website=obj_in.website,
             institution=obj_in.institution,
             budget=obj_in.budget,
+            allocated_budget=obj_in.budget,
             status="pending",
             created_at=obj_in.created_at,
             daa_pdf=_pdf_obj.id,
