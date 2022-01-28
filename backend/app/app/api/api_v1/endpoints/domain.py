@@ -12,10 +12,12 @@ from app import crud, models, schemas
 from app.api import deps
 from starlette.responses import StreamingResponse, PlainTextResponse
 
-from ....schemas.domain import Domain, DomainCreate, DomainUpdate, DomainProfile, DomainConfiguration, DomainUpdateVersion
+from ....schemas.domain import Domain, DomainCreate, DomainUpdate, DomainProfile, DomainConfiguration, \
+    DomainUpdateVersion
 from ....schemas.tags import Tags
 from ....schemas.user import UserDetail, User
 from ....schemas.domain_user import DomainUserCreate, DomainUser
+from ....schemas.roles import RoleInDB
 from pydantic.networks import EmailStr
 from fastapi.responses import FileResponse
 
@@ -126,6 +128,7 @@ def get_users_of_domain(
 def get_domain_profile(
         *,
         db: Session = Depends(deps.get_db),
+        current_user: models.User = Depends(deps.get_current_user),
         domain_name: str,
 ) -> Any:
     """
@@ -309,7 +312,6 @@ def get_domain_configuration(
 def get_domain_version(
         *,
         db: Session = Depends(deps.get_db),
-        current_user: models.User = Depends(deps.get_current_user),
         domain_name: str,
 ) -> Any:
     """
@@ -388,3 +390,26 @@ def delete_domain(
         raise HTTPException(
             status_code=500, detail="Error"
         )
+
+
+@router.get("/role-by-user", response_model=RoleInDB)
+def get_role_of_user_in_domain(
+        *,
+        db: Session = Depends(deps.get_db),
+        current_user: models.User = Depends(deps.get_current_user),
+        user_email: EmailStr,
+) -> Any:
+    """
+    Get user's role based on user's email.
+    """
+    user = crud.user.get_by_email(db, email=user_email)
+    current_user_domain = crud.domain_user.get_current_user_domain(db, user_id=current_user.id)
+    user_domain_role = crud.domain_user.get_by_user_id(db, user_id = user.id, domain_id = current_user_domain.id)
+    role = crud.role.get_by_id(db, id = user_domain_role.role)
+
+    if not role:
+        raise HTTPException(
+            status_code=500,
+            detail="Error",
+        )
+    return role
