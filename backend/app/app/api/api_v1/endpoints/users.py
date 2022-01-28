@@ -28,6 +28,33 @@ def update_user_password(
         db: Session = Depends(deps.get_db),
         current_password: str = Body(None),
         password: str = Body(None),
+        current_user: models.User = Depends(deps.get_current_user),
+) -> Any:
+    """
+    Update own user.
+    """
+    current_user_data = jsonable_encoder(current_user)
+    user_in = schemas.UserUpdate(**current_user_data)
+    user = crud.user.authenticate(
+        db, email=current_user.email, password=current_password
+    )
+    if user:
+        user_in.password = password
+    else:
+        raise HTTPException(
+            status_code=400,
+            detail="Current password could not be confirmed. Please check again."
+        )
+    user = crud.user.update(db, db_obj=current_user, obj_in=user_in)
+    return user
+
+
+@router.put("/update-profile-password", response_model=schemas.User)
+def update_user_password(
+        *,
+        db: Session = Depends(deps.get_db),
+        current_password: str = Body(None),
+        password: str = Body(None),
         full_name: str = Body(...),
         website: str = Body(...),
         email: EmailStr = Body(...),
