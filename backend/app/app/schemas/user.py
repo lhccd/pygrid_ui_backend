@@ -57,7 +57,8 @@ class UserBudget(UserInDBBase):
 
 class UserDetail(UserProfile):
     role: Optional[str]
-    budget: Optional[int]
+    budget: Optional[float]
+    allocated_budget: Optional[float]
     created_at: Optional[datetime]
     added_by: Optional[str]
     daa_pdf: Optional[bytes]
