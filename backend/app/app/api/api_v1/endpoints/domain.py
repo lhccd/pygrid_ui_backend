@@ -210,28 +210,19 @@ def add_tags_to_domain(
         *,
         db: Session = Depends(deps.get_db),
         current_user: models.User = Depends(deps.get_current_user),
+        domain_name: str = Body(...),
         tags: List[str] = Body(...),
 ) -> Any:
     """
         Add a tag to the domain
     """
-    current_user_domain = crud.domain_user.get_current_user_domain(db, user_id=current_user.id)
-    #tags = crud.tags.get_tags_for_domain(db, domain_id=current_user_domain.id)
-    crud.tags.delete_all_from_domain(db, domain_id=current_user_domain.id)
-
-    #for tag in tags:
-    #    if tag.name == tag_name:
-    #        raise HTTPException(
-    #            status_code=400,
-    #            detail="This tag already exists.",
-    #        )
+    domain = crud.domain.get_by_name(db, name=domain_name)
+    crud.tags.delete_all_from_domain(db, domain_id=domain.id)
     result = []
     for tag in tags:
-        tag_in = Tags(name=tag, domain=current_user_domain.id)
+        tag_in = Tags(name=tag, domain=domain.id)
         result.append(crud.tags.create(db, obj_in=tag_in))
     return result
-
-
 
 
 @router.get("/domain-tags", response_model=List[Tags])
@@ -239,18 +230,17 @@ def get_tags(
         *,
         db: Session = Depends(deps.get_db),
         current_user: models.User = Depends(deps.get_current_user),
+        domain_name: str,
 ) -> Any:
     """
     Get all tags for the domain in which user is logged in
     """
-    domain = crud.domain_user.get_current_user_domain(db, user_id=current_user.id)
+    domain = crud.domain.get_by_name(db, name=domain_name)
     tags = crud.tags.get_tags_for_domain(db, domain_id=domain.id)
     if not tags:
-        raise HTTPException(
-            status_code=400,
-            detail="No tags to show."
-        )
+        return []
     return tags
+
 
 @router.get("/domain-tags-open", response_model=List[Tags])
 def get_tags(
@@ -264,10 +254,7 @@ def get_tags(
     domain = crud.domain.get_by_name(db, name=domain_name)
     tags = crud.tags.get_tags_for_domain(db, domain_id=domain.id)
     if not tags:
-        raise HTTPException(
-            status_code=400,
-            detail="No tags to show."
-        )
+        return []
     return tags
 
 
@@ -397,14 +384,15 @@ def get_role_of_user_in_domain(
         db: Session = Depends(deps.get_db),
         current_user: models.User = Depends(deps.get_current_user),
         user_email: EmailStr,
+        domain_name: str
 ) -> Any:
     """
     Get user's role based on user's email.
     """
     user = crud.user.get_by_email(db, email=user_email)
-    current_user_domain = crud.domain_user.get_current_user_domain(db, user_id=current_user.id)
-    user_domain_role = crud.domain_user.get_by_user_id(db, user_id = user.id, domain_id = current_user_domain.id)
-    role = crud.role.get_by_id(db, id = user_domain_role.role)
+    domain = crud.domain.get_by_name(db, name=domain_name)
+    user_domain_role = crud.domain_user.get_by_user_id(db, user_id=user.id, domain_id=domain.id)
+    role = crud.role.get_by_id(db, id=user_domain_role.role)
 
     if not role:
         raise HTTPException(
