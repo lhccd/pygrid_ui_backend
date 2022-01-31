@@ -338,3 +338,21 @@ def get_denied_users(
     # fetch users with a status = active/pending/denied
     users = crud.user.get_users_by_status(db, skip=skip, limit=limit, status="denied")
     return users
+
+
+@router.delete("/delete-by-id")
+def delete_user_by_id(
+        user_id: uuid.UUID,
+        current_user: models.User = Depends(deps.get_current_user),
+        db: Session = Depends(deps.get_db),
+) -> None:
+    """
+    Here deleting only current user - needs adjustment
+    + deleting roles permissions etc
+    """
+    try:
+        crud.user.delete_by_id(db, id=user_id)
+    except Exception as err:
+        raise HTTPException(
+            status_code=500, detail="Cannot do the operation."
+        )

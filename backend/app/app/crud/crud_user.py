@@ -113,6 +113,10 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         db.query(User).filter(User.email == email).delete()
         db.commit()
 
+    def delete_by_id(self, db: Session, *, id: uuid.UUID) -> None:
+        db.query(User).filter(User.id == id).delete()
+        db.commit()
+
     def is_accepted(self, user: User) -> bool:
         return user.status == "accepted"
 
