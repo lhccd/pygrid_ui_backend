@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 from app.crud.base import CRUDBase
 from app.models.roles import Role
-from app.schemas.roles import RoleBase, RoleCreate, RoleUpdate
+from app.schemas.roles import RoleBase, RoleCreate, RoleUpdate, RoleInDB
 
 class CRUDRole(CRUDBase[RoleBase, RoleCreate, RoleUpdate]):
     def get_by_name(self, db: Session, *, name: str) -> Optional[Role]:
@@ -32,5 +32,12 @@ class CRUDRole(CRUDBase[RoleBase, RoleCreate, RoleUpdate]):
         db.commit()
         db.refresh(db_obj)
         return db_obj
+
+    def update_role(self, db: Session, *, db_obj: Role, obj_in: RoleInDB) -> Role:
+        if isinstance(obj_in, dict):
+            update_data = obj_in
+        else:
+            update_data = obj_in.dict(exclude_unset=True)
+        return super().update(db, db_obj=db_obj, obj_in=update_data)
 
 role = CRUDRole(Role)

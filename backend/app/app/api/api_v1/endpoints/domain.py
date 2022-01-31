@@ -435,4 +435,112 @@ def get_role_by_domain(
            )
     return roles_in_domain
 
+@router.put("/update-role-in-domain", response_model=RoleInDB)
+def update_role_in_domain(
+        *,
+        db: Session = Depends(deps.get_db),
+        current_user: models.User = Depends(deps.get_current_user),
+        domain_name: str,
+        role_name: str,
+        can_make_data_requests: bool = Body(...),
+        can_triage_data_requests: bool = Body(...),
+        can_manage_privacy_budget: bool = Body(...),
+        can_create_users: bool = Body(...),
+        can_manage_users: bool = Body(...),
+        can_edit_roles: bool = Body(...),
+        can_manage_infrastructure: bool = Body(...),
+        can_upload_data: bool = Body(...),
+        can_upload_legal_document: bool = Body(...),
+        can_edit_domain_settings: bool = Body(...),
+) -> Any:
+    """
+    Update a single role in the domain by domain_name.
+    """
+    domain = crud.domain.get_by_name(db, name=domain_name)
+    domain_user = crud.domain_user.get_by_domain_id(db, domain_id=domain.id)
 
+    roles = []
+    roles.append(domain_user[0])
+
+    for k in domain_user:
+        if k.role == roles[0].role:
+            pass
+        else:
+            roles.insert(0, k)
+
+    roles_in_domain = []
+    for k in roles:
+        fetched_role = crud.role.get_by_id(db, id=k.role)
+        roles_in_domain.append(fetched_role)
+
+    for role in roles_in_domain:
+        if (role_name == "Administrator" and role.name == "Administrator"):
+            role_in = RoleInDB(
+                can_make_data_requests = can_make_data_requests,
+                can_triage_data_requests = can_triage_data_requests,
+                can_manage_privacy_budget = can_manage_privacy_budget,
+                can_create_users = can_create_users,
+                can_manage_users = can_manage_users,
+                can_edit_roles = can_edit_roles,
+                can_manage_infrastructure = can_manage_infrastructure,
+                can_upload_data = can_upload_data,
+                can_upload_legal_document = can_upload_legal_document,
+                can_edit_domain_settings = can_edit_domain_settings
+            )
+            role = crud.role.update_role(db, db_obj=role, obj_in=role_in)
+            break
+
+        if (role_name == "Domain Owner" and role.name == "Domain Owner"):
+            role_in = RoleInDB(
+                can_make_data_requests = can_make_data_requests,
+                can_triage_data_requests = can_triage_data_requests,
+                can_manage_privacy_budget = can_manage_privacy_budget,
+                can_create_users = can_create_users,
+                can_manage_users = can_manage_users,
+                can_edit_roles = can_edit_roles,
+                can_manage_infrastructure = can_manage_infrastructure,
+                can_upload_data = can_upload_data,
+                can_upload_legal_document = can_upload_legal_document,
+                can_edit_domain_settings = can_edit_domain_settings
+            )
+            role = crud.role.update_role(db, db_obj=role, obj_in=role_in)
+            break
+
+        if (role_name == "Compliance Officer" and role.name == "Compliance Officer"):
+            role_in = RoleInDB(
+                can_make_data_requests = can_make_data_requests,
+                can_triage_data_requests = can_triage_data_requests,
+                can_manage_privacy_budget = can_manage_privacy_budget,
+                can_create_users = can_create_users,
+                can_manage_users = can_manage_users,
+                can_edit_roles = can_edit_roles,
+                can_manage_infrastructure = can_manage_infrastructure,
+                can_upload_data = can_upload_data,
+                can_upload_legal_document = can_upload_legal_document,
+                can_edit_domain_settings = can_edit_domain_settings
+            )
+            role = crud.role.update_role(db, db_obj=role, obj_in=role_in)
+            break
+
+        if (role_name == "Data Scientist" and role.name == "Data Scientist"):
+            role_in = RoleInDB(
+                can_make_data_requests = can_make_data_requests,
+                can_triage_data_requests = can_triage_data_requests,
+                can_manage_privacy_budget = can_manage_privacy_budget,
+                can_create_users = can_create_users,
+                can_manage_users = can_manage_users,
+                can_edit_roles = can_edit_roles,
+                can_manage_infrastructure = can_manage_infrastructure,
+                can_upload_data = can_upload_data,
+                can_upload_legal_document = can_upload_legal_document,
+                can_edit_domain_settings = can_edit_domain_settings
+            )
+            role = crud.role.update_role(db, db_obj=role, obj_in=role_in)
+            break
+
+    if not role:
+           raise HTTPException(
+               status_code=500,
+               detail="Domain doesn't have this role.",
+           )
+    return role
