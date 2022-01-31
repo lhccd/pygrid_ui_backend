@@ -117,8 +117,17 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         db.query(User).filter(User.id == id).delete()
         db.commit()
 
+
     def is_accepted(self, user: User) -> bool:
         return user.status == "accepted"
+
+
+    def is_pending(self, user: User) -> bool:
+        return user.status == "pending"
+
+
+    def is_denied(self, user: User) -> bool:
+        return user.status == "denied"
 
     def get_pdf_by_email(self, db: Session, *, email: str) -> Optional[PDFObject]:
         pdf_user = db.query(User).filter(User.email == email).first()

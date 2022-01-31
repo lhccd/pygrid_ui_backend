@@ -13,8 +13,7 @@ from app import crud, models, schemas
 from app.api import deps
 from starlette.responses import StreamingResponse, PlainTextResponse
 
-from ....schemas.domain import Domain, DomainCreate, DomainUpdate, DomainProfile, DomainConfiguration, \
-    DomainUpdateVersion
+from ....schemas.domain import Domain, DomainCreate, DomainUpdate, DomainProfile, DomainUpdateVersion
 from ....schemas.tags import Tags
 from ....schemas.user import UserDetail, User
 from ....schemas.domain_user import DomainUserCreate, DomainUser
@@ -191,7 +190,6 @@ def get_domain_pdf(
 def get_domain_owner(
         *,
         db: Session = Depends(deps.get_db),
-        current_user: models.User = Depends(deps.get_current_user),
         domain_name: str,
 ) -> Any:
     """
@@ -274,6 +272,7 @@ def delete_tag(
         raise HTTPException(
             status_code=500, detail="Error"
         )
+"""
 
 
 @router.get("/domain-configuration", response_model=DomainConfiguration)
@@ -283,9 +282,8 @@ def get_domain_configuration(
         current_user: models.User = Depends(deps.get_current_user),
         domain_name: str,
 ) -> Any:
-    """
-    Get domain configuration, whether daa is required or not
-    """
+    #Get domain configuration, whether daa is required or not
+    
     domain = crud.domain.get_by_name(db, name=domain_name)
     if not domain:
         raise HTTPException(
@@ -293,7 +291,7 @@ def get_domain_configuration(
             detail="This domain " + domain_name + " does not exist",
         )
     return domain
-
+"""
 
 @router.get("/domain-version", response_model=DomainUpdateVersion)
 def get_domain_version(

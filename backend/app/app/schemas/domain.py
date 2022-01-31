@@ -44,12 +44,8 @@ class DomainProfile(DomainInDBBase):
     deployed_on: Optional[datetime]
     description: Optional[str] = None
     support_email: Optional[str] = None
+    require_daa: Optional[bool] = None
 
-
-class DomainConfiguration(DomainInDBBase):
-    # TODO: Add require daa when it is ready
-    #require_daa: bool
-    pass
 
 
 class DomainUpdateVersion(DomainInDBBase):

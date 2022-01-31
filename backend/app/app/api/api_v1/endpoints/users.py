@@ -16,6 +16,7 @@ from starlette.responses import StreamingResponse
 
 from ....models.pdf import PDFObject
 from ....schemas.user import UserProfile, PendingUser, ActiveUser, DeniedUser, UserDetail, UserUpdate, UserBudget, UserUpdateWithPassword
+from ....schemas.domain_user import DomainUserCreate
 from app.api import deps
 from app.core.config import settings
 from app.utils import send_new_account_email
@@ -124,6 +125,7 @@ def create_user_open(
         website: str = Body(None),
         institution: str = Body(None),
         allocated_budget: float = Body(None),
+        domain_name: str = Body(...)
 ) -> Any:
     """
     Create new user without daa requirement
@@ -142,6 +144,17 @@ def create_user_open(
     user_in = schemas.UserCreate(password=password, email=email, full_name=full_name, website=website,
                                  institution=institution, allocated_budget=allocated_budget, created_at=datetime.now())
     user = crud.user.create_with_no_daa(db, obj_in=user_in)
+    domain = crud.domain.get_by_name(db, name=domain_name)
+    domain_user = crud.domain_user.get_by_user_id(db, user_id=user.id, domain_id=domain.id)
+    if domain_user:
+        raise HTTPException(
+            status_code=400,
+            detail="The user is already in the domain"
+        )
+    domain_user = DomainUserCreate(user=user.id,
+                                   domain=domain.id,
+                                   role=1)  # TODO: shouldn't be hardcoded or at least who is the data scientist?
+    crud.domain.add_user(db, obj_in=domain_user)
     return user
 
 
@@ -156,6 +169,7 @@ async def create_user_daa(
         institution: str = Body(None),
         allocated_budget=0.0,
         daa_pdf: UploadFile = File(...),
+        domain_name: str = Body(...)
 ) -> Any:
     """
     Create new user without the need to be logged in.
@@ -177,6 +191,17 @@ async def create_user_daa(
                                  website=website,
                                  institution=institution, allocated_budget=allocated_budget, created_at=datetime.now())
     user = crud.user.create_with_daa(db, obj_in=user_in)
+    domain = crud.domain.get_by_name(db, name=domain_name)
+    domain_user = crud.domain_user.get_by_user_id(db, user_id=user.id, domain_id=domain.id)
+    if domain_user:
+        raise HTTPException(
+            status_code=400,
+            detail="The user is already in the domain"
+        )
+    domain_user = DomainUserCreate(user=user.id,
+                                   domain=domain.id,
+                                   role=1) # TODO: shouldn't be hardcoded or at least who is the data scientist?
+    crud.domain.add_user(db, obj_in=domain_user)
     return user
 
 
@@ -301,13 +326,21 @@ def get_accepted_users(
         skip: int = 0,
         limit: int = 100,
         current_user: models.User = Depends(deps.get_current_user),
+        *,
+        domain_name: str
 ) -> Any:
     """
     Retrieve Accepted Users.
     """
     # fetch users with a status = accepted/pending/denied
-    users = crud.user.get_users_by_status(db, skip=skip, limit=limit)
-    return users
+    #users = crud.user.get_users_by_status(db, skip=skip, limit=limit)
+    users = crud.domain.get_users(db, domain_name=domain_name)
+    result = []
+    for user in users:
+        if crud.user.is_accepted(user=user):
+            result.append(user)
+
+    return result
 
 
 @router.get("/pending-users", response_model=List[ActiveUser])
@@ -316,13 +349,21 @@ def get_pending_users(
         skip: int = 0,
         limit: int = 100,
         current_user: models.User = Depends(deps.get_current_user),
+        *,
+        domain_name: str
 ) -> Any:
     """
     Retrieve Pending Users.
     """
     # fetch users with a status = active/pending/denied
-    users = crud.user.get_users_by_status(db, skip=skip, limit=limit, status="pending")
-    return users
+    #users = crud.user.get_users_by_status(db, skip=skip, limit=limit, status="pending")
+    users = crud.domain.get_users(db, domain_name=domain_name)
+    result = []
+    for user in users:
+        if crud.user.is_pending(user=user):
+            result.append(user)
+
+    return result
 
 
 @router.get("/denied-users", response_model=List[ActiveUser])
@@ -331,14 +372,21 @@ def get_denied_users(
         skip: int = 0,
         limit: int = 100,
         current_user: models.User = Depends(deps.get_current_user),
+        *,
+        domain_name: str
 ) -> Any:
     """
     Retrieve Denied Users.
     """
     # fetch users with a status = active/pending/denied
-    users = crud.user.get_users_by_status(db, skip=skip, limit=limit, status="denied")
-    return users
+    #users = crud.user.get_users_by_status(db, skip=skip, limit=limit, status="denied")
+    users = crud.domain.get_users(db, domain_name=domain_name)
+    result = []
+    for user in users:
+        if crud.user.is_denied(user=user):
+            result.append(user)
 
+    return result
 
 @router.delete("/delete-by-id")
 def delete_user_by_id(

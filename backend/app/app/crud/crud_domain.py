@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 from app import crud
 from app.crud.base import CRUDBase
 from app.models.domain import Domain
-from app.schemas.domain import DomainBase, DomainCreate, DomainUpdate, DomainConfiguration
+from app.schemas.domain import DomainBase, DomainCreate, DomainUpdate
 from app.schemas.domain_user import DomainUserBase, DomainUserCreate, DomainUserUpdate
 
 from app.models.pdf import PDFObject

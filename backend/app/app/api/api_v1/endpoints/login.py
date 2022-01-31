@@ -42,8 +42,11 @@ def login_access_token(
 
 @router.post("/login/get-token", response_model=schemas.Token)
 def login_get_token(
-    db: Session = Depends(deps.get_db), username: str = Body(...),
-        password: str = Body(...)
+        db: Session = Depends(deps.get_db),
+        username: str = Body(...),
+        password: str = Body(...),
+        domain_name: str = Body(...)
+
 ) -> Any:
     """
     OAuth2 compatible token login, get an access token for future requests
@@ -53,7 +56,14 @@ def login_get_token(
     )
     if not user:
         raise HTTPException(status_code=400, detail="Incorrect email or password")
-    elif not crud.user.is_accepted(user):
+    domain = crud.domain.get_by_name(db, name=domain_name)
+    domain_user = crud.domain_user.get_by_user_id(db, user_id=user.id, domain_id=domain.id)
+    if not domain_user:
+        raise HTTPException(
+            status_code=400,
+            detail="The user is not in the domain"
+        )
+    if not crud.user.is_accepted(user): # TODO: this condition will change and will be dependent on domain_name
         raise HTTPException(status_code=400, detail="Not Accepted User")
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     return {
