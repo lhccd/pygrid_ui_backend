@@ -400,3 +400,39 @@ def get_role_of_user_in_domain(
             detail="Error",
         )
     return role
+
+@router.get("/get-roles-by-domain", response_model=List[RoleInDB])
+def get_role_by_domain(
+        *,
+        db: Session = Depends(deps.get_db),
+        current_user: models.User = Depends(deps.get_current_user),
+        domain_name: str
+) -> Any:
+    """
+    Get roles in the domain by domain_name.
+    """
+    domain = crud.domain.get_by_name(db, name=domain_name)
+    domain_user = crud.domain_user.get_by_domain_id(db, domain_id=domain.id)
+
+    roles = []
+    roles.append(domain_user[0])
+
+    for k in domain_user:
+        if k.role == roles[0].role:
+            pass
+        else:
+            roles.insert(0, k)
+
+    roles_in_domain = []
+    for k in roles:
+        role = crud.role.get_by_id(db, id=k.role)
+        roles_in_domain.append(role)
+
+    if not roles:
+           raise HTTPException(
+               status_code=500,
+               detail="Error",
+           )
+    return roles_in_domain
+
+

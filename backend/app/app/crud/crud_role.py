@@ -12,7 +12,6 @@ class CRUDRole(CRUDBase[RoleBase, RoleCreate, RoleUpdate]):
 
     def get_by_id(self, db: Session, *, id: int) -> Optional[Role]:
         role = db.query(Role).filter(Role.id == id).first()
-        print(role)
         return role
 
     def create(self, db: Session, *, obj_in: Role) -> Role:

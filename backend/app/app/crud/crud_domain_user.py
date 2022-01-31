@@ -21,6 +21,9 @@ class CRUDDomainUser(CRUDBase[Domain_User, DomainUserCreate, DomainUserUpdate]):
     def get_by_user_id(self, db: Session, *, user_id: uuid.UUID, domain_id: uuid.UUID) -> Optional[Domain_User]:
         return db.query(Domain_User).filter(Domain_User.user == user_id, Domain_User.domain == domain_id).first()
 
+    def get_by_domain_id(self, db: Session, *, domain_id: uuid.UUID):
+        return db.query(Domain_User).filter(Domain_User.domain == domain_id).all()
+
     def get_user(self, db: Session, *, domain_name: str, user_email: EmailStr):
         domain = crud.domain.get_by_name(db=db, name=domain_name)
         user = crud.user.get_by_email(db, email=user_email)
