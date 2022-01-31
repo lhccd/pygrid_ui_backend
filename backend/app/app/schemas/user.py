@@ -54,7 +54,7 @@ class UserProfile(UserInDBBase):
     status: Optional[str] = None
 
 class UserBudget(UserInDBBase):
-    budget: float
+    allocated_budget: float
 
 class UserDetail(UserProfile):
     role: Optional[str]

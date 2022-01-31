@@ -123,7 +123,7 @@ def create_user_open(
         full_name: str = Body(...),
         website: str = Body(None),
         institution: str = Body(None),
-        budget: float = Body(None),
+        allocated_budget: float = Body(None),
 ) -> Any:
     """
     Create new user without daa requirement
@@ -140,7 +140,7 @@ def create_user_open(
             detail="The user with this username already exists in the system",
         )
     user_in = schemas.UserCreate(password=password, email=email, full_name=full_name, website=website,
-                                 institution=institution, budget=budget, allocated_budget=budget, created_at=datetime.now())
+                                 institution=institution, allocated_budget=allocated_budget, created_at=datetime.now())
     user = crud.user.create_with_no_daa(db, obj_in=user_in)
     return user
 
@@ -154,7 +154,7 @@ async def create_user_daa(
         full_name: str = Body(...),
         website: str = Body(None),
         institution: str = Body(None),
-        budget=0.0,
+        allocated_budget=0.0,
         daa_pdf: UploadFile = File(...),
 ) -> Any:
     """
@@ -175,7 +175,7 @@ async def create_user_daa(
     pdf_obj = models.pdf.PDFObject(binary=pdf_file)
     user_in = schemas.UserCreate(password=password, email=email, full_name=full_name, daa_pdf=pdf_obj.binary,
                                  website=website,
-                                 institution=institution, budget=budget, allocated_budget=budget, created_at=datetime.now())
+                                 institution=institution, allocated_budget=allocated_budget, created_at=datetime.now())
     user = crud.user.create_with_daa(db, obj_in=user_in)
     return user
 
@@ -226,13 +226,13 @@ def update_budget(
         db: Session = Depends(deps.get_db),
         current_user: models.User = Depends(deps.get_current_user),
         user_email: EmailStr,
-        budget: float = Body(...),
+        allocated_budget: float = Body(...),
 ) -> Any:
     """
-    Update a user's budget.
+    Update a user's allocated_budget.
     """
     user = crud.user.get_by_email(db, email=user_email)
-    user_in = UserBudget(budget=budget)
+    user_in = UserBudget(allocated_budget=allocated_budget)
     if not user:
         raise HTTPException(
             status_code=400,
