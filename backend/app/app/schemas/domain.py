@@ -19,7 +19,7 @@ class DomainCreate(DomainBase):
     branch: Optional[str] = None
     commit_hash: Optional[str] = None
     pdf_daa: Optional[bytes] = None
-    domain_url: Optional[str]= None
+    domain_url: Optional[str] = None
 
 
 class DomainUpdate(DomainCreate):

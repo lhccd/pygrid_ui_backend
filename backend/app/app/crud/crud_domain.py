@@ -36,6 +36,7 @@ class CRUDDomain(CRUDBase[Domain, DomainCreate, DomainUpdate]):
             repository=obj_in.repository,
             branch=obj_in.branch,
             commit_hash=obj_in.commit_hash,
+            domain_url=obj_in.domain_url,
             require_daa=True,
             pdf_daa_id=_pdf_obj.id
         )
@@ -52,6 +53,7 @@ class CRUDDomain(CRUDBase[Domain, DomainCreate, DomainUpdate]):
             support_email=obj_in.support_email,
             version_name=obj_in.version_name,
             repository=obj_in.repository,
+            domain_url=obj_in.domain_url,
             branch=obj_in.branch,
             commit_hash=obj_in.commit_hash,
             require_daa=False
