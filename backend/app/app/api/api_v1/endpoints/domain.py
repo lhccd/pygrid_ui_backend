@@ -373,18 +373,11 @@ def update_domain_settings(
 async def add_pdf(
         *,
         db: Session = Depends(deps.get_db),
-        domain_name: str,
         daa_pdf: UploadFile = File(...)
 ) -> Any:
     """
     Add a pdf for a domain
     """
-    domain = crud.domain.get_by_name(db, name=domain_name)
-    if not domain:
-        raise HTTPException(
-            status_code=400,
-            detail="The domain does not exist in the system",
-        )
     pdf_file = await daa_pdf.read()
     pdf_obj = models.pdf.PDFObject(binary=pdf_file)
     domain_in = DomainUpdate(pdf_daa=pdf_obj.binary)
