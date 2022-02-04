@@ -373,7 +373,6 @@ def update_domain_settings(
 async def add_pdf(
         *,
         db: Session = Depends(deps.get_db),
-        current_user: models.User = Depends(deps.get_current_user),
         domain_name: str,
         daa_pdf: UploadFile = File(...)
 ) -> Any:
