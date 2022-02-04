@@ -35,6 +35,7 @@ async def create_domain(
         repository=Body(...),
         branch=Body(...),
         commit_hash=Body(...),
+        domain_url=Body(...),
         daa_pdf: UploadFile = File(...),
 ) -> Any:
     """
@@ -50,7 +51,7 @@ async def create_domain(
     pdf_obj = models.pdf.PDFObject(binary=pdf_file)
     domain_in = schemas.DomainCreate(
         name=name, deployed_on=datetime.now(), description=description, support_email=support_email,
-        version_name=version_name,
+        version_name=version_name, domain_url=domain_url,
         repository=repository, branch=branch, commit_hash=commit_hash, pdf_daa=pdf_obj.binary
     )
     domain = crud.domain.create(db, obj_in=domain_in)
@@ -65,6 +66,7 @@ def create_domain_no_daa(
         description=Body(...),
         support_email=Body(...),
         version_name=Body(...),
+        domain_url=Body(...),
         repository=Body(...),
         branch=Body(...),
         commit_hash=Body(...),
@@ -80,7 +82,7 @@ def create_domain_no_daa(
         )
     domain_in = schemas.DomainCreate(
         name=name, deployed_on=datetime.now(), description=description, support_email=support_email,
-        version_name=version_name,
+        version_name=version_name, domain_url=domain_url,
         repository=repository, branch=branch, commit_hash=commit_hash
     )
     domain = crud.domain.create_no_daa(db, obj_in=domain_in)

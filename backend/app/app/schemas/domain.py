@@ -19,6 +19,7 @@ class DomainCreate(DomainBase):
     branch: Optional[str] = None
     commit_hash: Optional[str] = None
     pdf_daa: Optional[bytes] = None
+    domain_url: Optional[str]= None
 
 
 class DomainUpdate(DomainCreate):
@@ -45,7 +46,7 @@ class DomainProfile(DomainInDBBase):
     description: Optional[str] = None
     support_email: Optional[str] = None
     require_daa: Optional[bool] = None
-
+    domain_url: Optional[str] = None
 
 
 class DomainUpdateVersion(DomainInDBBase):
