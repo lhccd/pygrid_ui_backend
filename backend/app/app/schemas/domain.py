@@ -22,7 +22,8 @@ class DomainCreate(DomainBase):
 
 
 class DomainUpdate(DomainCreate):
-    pass
+    require_daa: Optional[bool] = None
+    pdf_daa_id: Optional[int] = None
 
 
 class DomainInDBBase(DomainBase):
@@ -34,8 +35,7 @@ class DomainInDBBase(DomainBase):
 
 # Additional properties to return via API
 class Domain(DomainInDBBase):
-    name: str
-    pdf_daa_id: Optional[int] = None
+    name: Optional[str]
     pass
 
 

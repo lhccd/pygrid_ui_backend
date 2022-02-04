@@ -57,6 +57,36 @@ async def create_domain(
     return domain
 
 
+@router.post("/create-domain-no-daa", response_model=Domain)
+def create_domain_no_daa(
+        *,
+        db: Session = Depends(deps.get_db),
+        name=Body(...),
+        description=Body(...),
+        support_email=Body(...),
+        version_name=Body(...),
+        repository=Body(...),
+        branch=Body(...),
+        commit_hash=Body(...),
+) -> Any:
+    """
+    Create a domain with no daa
+    """
+    domain = crud.domain.get_by_name(db, name=name)
+    if domain:
+        raise HTTPException(
+            status_code=400,
+            detail="This domain " + name + " already exists in the system",
+        )
+    domain_in = schemas.DomainCreate(
+        name=name, deployed_on=datetime.now(), description=description, support_email=support_email,
+        version_name=version_name,
+        repository=repository, branch=branch, commit_hash=commit_hash
+    )
+    domain = crud.domain.create_no_daa(db, obj_in=domain_in)
+    return domain
+
+
 @router.post("/add-user", response_model=DomainUser)
 def add_user_to_domain(
         *,
@@ -272,26 +302,7 @@ def delete_tag(
         raise HTTPException(
             status_code=500, detail="Error"
         )
-"""
 
-
-@router.get("/domain-configuration", response_model=DomainConfiguration)
-def get_domain_configuration(
-        *,
-        db: Session = Depends(deps.get_db),
-        current_user: models.User = Depends(deps.get_current_user),
-        domain_name: str,
-) -> Any:
-    #Get domain configuration, whether daa is required or not
-    
-    domain = crud.domain.get_by_name(db, name=domain_name)
-    if not domain:
-        raise HTTPException(
-            status_code=400,
-            detail="This domain " + domain_name + " does not exist",
-        )
-    return domain
-"""
 
 @router.get("/domain-version", response_model=DomainUpdateVersion)
 def get_domain_version(
@@ -316,7 +327,6 @@ def update_domain(
         *,
         db: Session = Depends(deps.get_db),
         current_user: models.User = Depends(deps.get_current_user),
-        last_updated: datetime = datetime.now(),
         domain_name: str,
         repository: str = Body(...),
         branch: str = Body(...),
@@ -326,7 +336,7 @@ def update_domain(
     Update a domain's version
     """
     domain = crud.domain.get_by_name(db, name=domain_name)
-    domain_in = DomainUpdate(repository=repository, branch=branch, commit_hash=commit_hash, last_updated=last_updated)
+    domain_in = DomainUpdate(repository=repository, branch=branch, commit_hash=commit_hash, last_updated=datetime.now())
     if not domain:
         raise HTTPException(
             status_code=400,
@@ -357,6 +367,52 @@ def update_domain_settings(
         )
     domain = crud.domain.update_version(db, db_obj=domain, obj_in=domain_in)
     return domain
+
+
+@router.put("/add-pdf", response_model=Domain)
+async def add_pdf(
+        *,
+        db: Session = Depends(deps.get_db),
+        current_user: models.User = Depends(deps.get_current_user),
+        domain_name: str,
+        daa_pdf: UploadFile = File(...)
+) -> Any:
+    """
+    Add a pdf for a domain
+    """
+    domain = crud.domain.get_by_name(db, name=domain_name)
+    if not domain:
+        raise HTTPException(
+            status_code=400,
+            detail="The domain does not exist in the system",
+        )
+    pdf_file = await daa_pdf.read()
+    pdf_obj = models.pdf.PDFObject(binary=pdf_file)
+    domain_in = DomainUpdate(pdf_daa=pdf_obj.binary)
+    pdf_model = crud.domain.add_pdf(db, obj_in=domain_in)
+    return pdf_model
+
+@router.put("/add-pdf-id")
+async def add_pdf(
+        *,
+        db: Session = Depends(deps.get_db),
+        current_user: models.User = Depends(deps.get_current_user),
+        domain_name: str,
+        pdf_daa_id: int
+) -> Any:
+    """
+    Add a pdf for a domain
+    """
+    domain = crud.domain.get_by_name(db, name=domain_name)
+    if not domain:
+        raise HTTPException(
+            status_code=400,
+            detail="The domain does not exist in the system",
+        )
+    domain_in = DomainUpdate(require_daa=True, last_updated=datetime.now(), pdf_daa_id=pdf_daa_id)
+    domain = crud.domain.update_version(db, db_obj=domain, obj_in=domain_in)
+    return domain
+
 
 
 @router.delete("/delete")

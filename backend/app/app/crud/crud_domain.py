@@ -36,7 +36,25 @@ class CRUDDomain(CRUDBase[Domain, DomainCreate, DomainUpdate]):
             repository=obj_in.repository,
             branch=obj_in.branch,
             commit_hash=obj_in.commit_hash,
+            require_daa=True,
             pdf_daa_id=_pdf_obj.id
+        )
+        db.add(db_obj)
+        db.commit()
+        db.refresh(db_obj)
+        return db_obj
+
+    def create_no_daa(self, db: Session, *, obj_in: DomainCreate) -> Domain:
+        db_obj = Domain(
+            name=obj_in.name,
+            deployed_on=obj_in.deployed_on,
+            description=obj_in.description,
+            support_email=obj_in.support_email,
+            version_name=obj_in.version_name,
+            repository=obj_in.repository,
+            branch=obj_in.branch,
+            commit_hash=obj_in.commit_hash,
+            require_daa=False
         )
         db.add(db_obj)
         db.commit()
@@ -59,6 +77,20 @@ class CRUDDomain(CRUDBase[Domain, DomainCreate, DomainUpdate]):
             update_data = obj_in.dict(exclude_unset=True)
         return super().update(db, db_obj=db_obj, obj_in=update_data)
 
+
+    def add_pdf(self, db: Session, *, obj_in: DomainUpdate) -> PDFObject:
+        _pdf_obj = PDFObject(binary=obj_in.pdf_daa)
+        db.add(_pdf_obj)
+        db.commit()
+        db.refresh(_pdf_obj)
+        return _pdf_obj
+
+    def update_config(self, db: Session, *, db_obj: Domain, obj_in: DomainUpdate) -> Domain:
+        if isinstance(obj_in, dict):
+            update_data = obj_in
+        else:
+            update_data = obj_in.dict(exclude_unset=True)
+        return super().update(db, db_obj=db_obj, obj_in=update_data)
 
     def get_domain_pdf(self, db: Session, *, pdf_id: int) -> Optional[PDFObject]:
         return db.query(PDFObject).filter(PDFObject.id == pdf_id).first()
