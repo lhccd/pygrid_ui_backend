@@ -63,7 +63,7 @@ def login_get_token(
             status_code=400,
             detail="The user is not in the domain"
         )
-    if not crud.user.is_accepted(user): # TODO: this condition will change and will be dependent on domain_name
+    if not crud.user.is_accepted(user):
         raise HTTPException(status_code=400, detail="Not Accepted User")
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     return {

@@ -40,6 +40,7 @@ class CRUDDomain(CRUDBase[Domain, DomainCreate, DomainUpdate]):
             require_daa=True,
             pdf_daa_id=_pdf_obj.id
         )
+        # TODO: create roles and a domain user for owner role for the person who creates this domain
         db.add(db_obj)
         db.commit()
         db.refresh(db_obj)
