@@ -1,10 +1,8 @@
 import uuid
-from sqlite3 import Date
 
 from typing import Optional
 from datetime import datetime
 from pydantic import BaseModel, EmailStr
-from app.models.roles import Role
 
 
 class UserBase(BaseModel):

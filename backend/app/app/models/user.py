@@ -26,6 +26,7 @@ class User(Base):
     created_at = Column(DateTime())
     status = Column(String(255))
     daa_pdf = Column(Integer, ForeignKey("daa_pdf.id"))
-    #role = Column(Integer, ForeignKey("role.id"))
-    #roles = relationship("Role", back_populates="user_role")
     domains = relationship("Domain_User", back_populates="users")
+    upgrade_request_rel = relationship("Upgrade_Request", back_populates="request_owner_user")
+    data_request_rel = relationship("Data_Request", back_populates="request_owner_user_rel")
+
