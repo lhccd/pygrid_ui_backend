@@ -55,6 +55,7 @@ async def create_domain(
         repository=repository, branch=branch, commit_hash=commit_hash, pdf_daa=pdf_obj.binary
     )
     domain = crud.domain.create(db, obj_in=domain_in)
+    init_domain_roles(db)
     return domain
 
 
@@ -86,6 +87,7 @@ def create_domain_no_daa(
         repository=repository, branch=branch, commit_hash=commit_hash
     )
     domain = crud.domain.create_no_daa(db, obj_in=domain_in)
+    init_domain_roles(db)
     return domain
 
 
@@ -537,3 +539,49 @@ def update_role_in_domain(
                detail="Domain doesn't have this role.",
            )
     return role
+
+def init_domain_roles(db: Session) -> None:
+    administrator_in = schemas.RoleCreate(
+        name = "Administrator",
+        can_make_data_requests = True,
+        can_triage_data_requests = True,
+        can_manage_privacy_budget = True,
+        can_create_users = True,
+        can_manage_users = True,
+        can_edit_roles = True,
+        can_upload_data = True,
+        can_upload_legal_document = True,
+        can_edit_domain_settings = True,
+        can_manage_infrastructure = False
+    )
+
+    domain_owner_in = schemas.RoleCreate(
+        name = "Domain Owner",
+        can_make_data_requests = True,
+        can_triage_data_requests = True,
+        can_manage_privacy_budget = True,
+        can_create_users = True,
+        can_manage_users = True,
+        can_edit_roles = True,
+        can_upload_data = True,
+        can_upload_legal_document = True,
+        can_edit_domain_settings = True,
+        can_manage_infrastructure = True
+    )
+
+    compliance_officer_in = schemas.RoleCreate(
+        name = "Compliance Officer",
+        can_triage_data_requests = True,
+        can_manage_privacy_budget = True,
+        can_manage_users = True
+    )
+
+    data_scientist_in = schemas.RoleCreate(
+        name = "Data Scientist",
+        can_make_data_requests = True
+    )
+
+    crud.role.create(db, obj_in=administrator_in)
+    crud.role.create(db, obj_in=domain_owner_in)
+    crud.role.create(db, obj_in=compliance_officer_in)
+    crud.role.create(db, obj_in=data_scientist_in)

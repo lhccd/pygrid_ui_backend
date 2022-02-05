@@ -28,7 +28,8 @@ def init_db(db: Session) -> None:
         can_edit_roles = True,
         can_upload_data = True,
         can_upload_legal_document = True,
-        can_edit_domain_settings = True
+        can_edit_domain_settings = True,
+        can_manage_infrastructure = False
     )
 
     domain_owner_in = schemas.RoleCreate(
