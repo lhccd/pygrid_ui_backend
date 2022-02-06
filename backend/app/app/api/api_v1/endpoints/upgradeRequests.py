@@ -31,12 +31,15 @@ def create_request(
             status_code=400,
             detail="This domain " + domain_name + " does not exist in the system",
         )
-    upgrade_request_in = UpgradeRequestCreate(domain = domain.id,
-                                           request_date=datetime.now(),
-                                           requested_budget=requested_budget,
-                                           status="pending",
-                                           reason=reason,
-                                           request_owner=current_user.id)
+    upgrade_request_in = UpgradeRequestCreate(
+        domain=domain.id,
+        request_date=datetime.now(),
+        requested_budget=requested_budget,
+        status="pending",
+        reason=reason,
+        request_owner_name=current_user.full_name,
+        request_owner=current_user.id
+    )
     upgrade_request = crud.upgrade_requests.create(db, obj_in=upgrade_request_in)
     if not upgrade_request:
         raise HTTPException(

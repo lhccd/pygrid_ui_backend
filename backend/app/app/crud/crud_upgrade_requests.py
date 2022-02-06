@@ -41,7 +41,8 @@ class CRUDUpgradeRequests(CRUDBase[Upgrade_Request, UpgradeRequestCreate, Upgrad
             requested_budget=obj_in.requested_budget,
             status=obj_in.status,
             reason=obj_in.reason,
-            request_owner=obj_in.request_owner
+            request_owner=obj_in.request_owner,
+            request_owner_name=obj_in.request_owner_name
         )
         db.add(db_obj)
         db.commit()

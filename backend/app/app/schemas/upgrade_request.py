@@ -6,6 +6,7 @@ from pydantic import BaseModel
 
 class UpgradeRequestBase(BaseModel):
     id: Optional[uuid.UUID]
+    request_owner_name: Optional[str] = None
     domain: Optional[uuid.UUID] = None
     request_date: Optional[datetime] = None
     requested_budget: Optional[float] = None
