@@ -19,7 +19,7 @@ class CRUDDataRequests(CRUDBase[Data_Request, DataRequestCreate, DataRequestUpda
     def get_by_id(self, db: Session, *, id: uuid.UUID) -> Optional[Data_Request]:
         return db.query(Data_Request).filter(Data_Request.id == id).first()
 
-    def get_upgrade_requests_of_domain(self, db: Session, *, domain_id: uuid.UUID):
+    def get_data_requests_of_domain(self, db: Session, *, domain_id: uuid.UUID):
         return db.query(Data_Request).filter(Data_Request.domain == domain_id).all()
 
     def get_requests(self, db: Session, *, domain_id: uuid.UUID, status: str = "pending"):
@@ -35,9 +35,14 @@ class CRUDDataRequests(CRUDBase[Data_Request, DataRequestCreate, DataRequestUpda
 
     def create(self, db: Session, *, obj_in: DataRequestCreate):
         db_obj = Data_Request(
+            name=obj_in.name,
+            data_subjects=obj_in.data_subjects,
             domain=obj_in.domain,
+            linked_datasets=obj_in.linked_datasets,
+            tags=obj_in.tags,
+            num_of_values=obj_in.num_of_values,
             request_date=obj_in.request_date,
-            requested_budget=obj_in.requested_budget,
+            request_size=obj_in.request_size,
             status=obj_in.status,
             reason=obj_in.reason,
             request_owner=obj_in.request_owner

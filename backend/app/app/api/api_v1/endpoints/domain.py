@@ -489,6 +489,7 @@ def update_role_in_domain(
     Update a single role in the domain by domain_name and role_name.
     """
     role = crud.role.get_by_name_and_domain(db, name=role_name, domain_name=domain_name)
+
     role_in = RoleInDB(
         can_make_data_requests=can_make_data_requests,
         can_triage_data_requests=can_triage_data_requests,

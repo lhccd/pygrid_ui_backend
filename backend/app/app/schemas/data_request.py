@@ -5,16 +5,16 @@ from pydantic import BaseModel
 
 class DataRequestBase(BaseModel):
     id: Optional[uuid.UUID]
-    name: Optional[str]
-    #domain
-    request_date: Optional[datetime]
-    data_subjects: Optional[int]
-    linked_datasets: Optional[str]
-    request_size: Optional[float]
-    status: Optional[str]
-    tags: Optional[str]
-    num_of_values: Optional[int]
-    reason: Optional[str]
+    name: Optional[str] = None
+    domain: Optional[uuid.UUID] = None
+    request_date: Optional[datetime] = None
+    data_subjects: Optional[int] = None
+    linked_datasets: Optional[str] = None
+    request_size: Optional[float] = None
+    status: Optional[str] = None
+    tags: Optional[str] = None
+    num_of_values: Optional[int] = None
+    reason: Optional[str] = None
     request_owner: Optional[uuid.UUID] = None
 
 class DataRequestCreate(DataRequestBase):

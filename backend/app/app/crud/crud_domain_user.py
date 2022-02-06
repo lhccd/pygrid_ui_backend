@@ -35,7 +35,6 @@ class CRUDDomainUser(CRUDBase[Domain_User, DomainUserCreate, DomainUserUpdate]):
             domain=obj_in.domain,
             role=obj_in.role
         )
-        # TODO: roles should be created
         db.add(db_obj)
         db.commit()
         db.refresh(db_obj)
