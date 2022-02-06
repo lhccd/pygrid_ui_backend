@@ -86,8 +86,24 @@ def update_user_password(
     return user
 
 
+@router.get("/get-by-id", response_model=UserDetail, responses={200: {"Success": "User Fetched Successfully"}})
+def get_user_by(
+        *,
+        db: Session = Depends(deps.get_db),
+        current_user: models.User = Depends(deps.get_current_user),
+        user_id: uuid.UUID
+) -> Any:
+    user = crud.user.get_by_id(db, id=user_id)
+    if not user:
+        raise HTTPException(
+            status_code=401,
+            detail="User not found"
+        )
+    return user
+
+
 @router.get("/user-detail", response_model=UserDetail, responses={200: {"Success": "User Fetched Successfully"}})
-def get_user_by_id(
+def get_user_detail_by_email(
         *,
         db: Session = Depends(deps.get_db),
         user_email: EmailStr,
