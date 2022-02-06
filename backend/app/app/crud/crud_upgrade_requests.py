@@ -24,7 +24,6 @@ class CRUDUpgradeRequests(CRUDBase[Upgrade_Request, UpgradeRequestCreate, Upgrad
 
     def get_requests(self, db: Session, *, domain_id: uuid.UUID, status: str = "pending"):
         if status is not "pending":
-            print(status)
             return db.query(Upgrade_Request).filter(and_(
                 Upgrade_Request.domain == domain_id,
                 not_(Upgrade_Request.status.like("pending"))
@@ -42,7 +41,8 @@ class CRUDUpgradeRequests(CRUDBase[Upgrade_Request, UpgradeRequestCreate, Upgrad
             status=obj_in.status,
             reason=obj_in.reason,
             request_owner=obj_in.request_owner,
-            request_owner_name=obj_in.request_owner_name
+            request_owner_name=obj_in.request_owner_name,
+            initial_budget=obj_in.initial_budget
         )
         db.add(db_obj)
         db.commit()

@@ -38,7 +38,8 @@ def create_request(
         status="pending",
         reason=reason,
         request_owner_name=current_user.full_name,
-        request_owner=current_user.id
+        request_owner=current_user.id,
+        initial_budget=current_user.allocated_budget
     )
     upgrade_request = crud.upgrade_requests.create(db, obj_in=upgrade_request_in)
     if not upgrade_request:

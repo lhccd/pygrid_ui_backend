@@ -13,6 +13,7 @@ class UpgradeRequestBase(BaseModel):
     status: Optional[str] = None
     reason: Optional[str] = None
     request_owner: Optional[uuid.UUID] = None
+    initial_budget: Optional[float] = None
 
 
 class UpgradeRequestCreate(UpgradeRequestBase):
