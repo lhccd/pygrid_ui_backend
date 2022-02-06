@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from app import crud, models, schemas
 from app.api import deps
 from ....schemas.upgrade_request import UpgradeRequest, UpgradeRequestCreate, UpgradeRequestUpdate
+from ....schemas.user import UserBudget
 
 router = APIRouter()
 
@@ -115,6 +116,9 @@ def accept_request(
         updated_on=datetime.now()
     )
     result = crud.upgrade_requests.update(db, db_obj=request, obj_in=request_in)
+    user = crud.user.get_by_id(db, id=result.request_owner)
+    user_in = UserBudget(allocated_budget=(user.allocated_budget + request.requested_budget))
+    crud.user.update_budget(db, db_obj=user, obj_in=user_in)
     return result
 
 
