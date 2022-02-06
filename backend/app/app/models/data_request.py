@@ -10,8 +10,10 @@ class Data_Request(Base):
     __tablename__ = "data_request"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    #domain = Column(UUID(as_uuid=True), ForeignKey("domain.id")) # TODO: add domain column
-    name = Column(String(255)) # TODO: As far as I understand this is  the name of the requester, so no need to add request_owner name column here
+    domain = Column(UUID(as_uuid=True), ForeignKey("domain.id"))
+    domain_relation = relationship("Domain", back_populates="data_request_rel_domain")
+    name = Column(String(255))
+    requester_name = Column(String(255))
     request_date = Column(DateTime, default=datetime.datetime.utcnow)
     data_subjects = Column(Integer())
     linked_datasets = Column(String(255))

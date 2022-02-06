@@ -20,8 +20,9 @@ class Upgrade_Request(Base):
     updated_on = Column(DateTime)
     reviewer_comments = Column(String(2048))
     updated_by = Column(String(255))
-    #request_owner_name = Column(String(255)) # TODO: add request owner name for convenience
-    # TODO: add initial budget, add the allocated budget at that time
+    request_owner_name = Column(String(255))
+    initial_budget = Column(Float(), default=0.0)
+    allocated_budget = Column(Float(), default=0.0)
     request_owner = Column(UUID(as_uuid=True), ForeignKey("user.id"))
     request_owner_user = relationship("User", back_populates="upgrade_request_rel")
 

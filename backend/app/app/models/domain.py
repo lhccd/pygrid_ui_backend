@@ -23,3 +23,4 @@ class Domain(Base):
     commit_hash = Column(String(255))
     users_in_domain = relationship("Domain_User", back_populates="domain_reference")
     domain_tags = relationship("Tags", back_populates="domain_rel")
+    data_request_rel_domain = relationship("Data_Request", back_populates="domain_relation")
