@@ -22,6 +22,7 @@ class Data_Request(Base):
     reason = Column(String(1024))
     updated_on = Column(DateTime, default=datetime.datetime.utcnow)
     updated_by = Column(String(255))
+    # request_owner_name = Column(String(255)) # TODO: add request owner name for convenience
     reviewer_comments = Column(String(2048))
     request_owner = Column(UUID(as_uuid=True), ForeignKey("user.id"))
     request_owner_user_rel = relationship("User", back_populates="data_request_rel")
