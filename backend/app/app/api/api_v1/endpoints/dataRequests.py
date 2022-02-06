@@ -21,10 +21,10 @@ def create_request(
         domain_name: str = Body(...),
         request_size: float = Body(...),
         reason: str = Body(None),
-        data_subjects: str = Body(None),
+        data_subjects: int = Body(None),
         linked_datasets: str = Body(None),
         tags: str = Body(None),
-        num_of_values: str = Body(None),
+        num_of_values: int = Body(None),
 ) -> Any:
     """
     Create a request
@@ -128,8 +128,14 @@ def accept_request(
     )
     result = crud.data_requests.update(db, db_obj=request, obj_in=request_in)
     user = crud.user.get_by_id(db, id=result.request_owner)
-    user_in = UserBudget(budget=(user.budget + request.requested_budget))
-    crud.user.update_budget(db, db_obj=user, obj_in=user_in)
+    if user.allocated_budget >= user.budget + request.request_size:
+        user_in = UserBudget(budget=(user.budget + request.request_size))
+        crud.user.update_budget(db, db_obj=user, obj_in=user_in)
+    else:
+        raise HTTPException(
+            status_code=403,
+            detail="Budget is not enough!"
+        )
     return result
 
 

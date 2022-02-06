@@ -5,6 +5,7 @@ from .crud_domain_user import domain_user
 from .crud_feedback import feedback
 from .crud_tags import tags
 from .crud_upgrade_requests import upgrade_requests
+from .crud_data_requests import data_requests
 # For a new basic set of CRUD operations you could just do
 
 # from .base import CRUDBase
