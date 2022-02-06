@@ -22,6 +22,7 @@ class Role(Base):
     can_upload_data = Column(Boolean(), default=False)
     can_upload_legal_document = Column(Boolean(), default=False)
     can_edit_domain_settings = Column(Boolean(), default=False)
+    domain_name = Column(String(255))
     rel_user = relationship("Domain_User", back_populates="domain_role")
 
     def __str__(self) -> str:

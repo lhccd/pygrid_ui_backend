@@ -27,4 +27,5 @@ class Data_Request(Base):
     updated_by = Column(String(255))
     reviewer_comments = Column(String(2048))
     request_owner = Column(UUID(as_uuid=True), ForeignKey("user.id"))
+    budget = Column(Float(), default=0.0)
     request_owner_user_rel = relationship("User", back_populates="data_request_rel")

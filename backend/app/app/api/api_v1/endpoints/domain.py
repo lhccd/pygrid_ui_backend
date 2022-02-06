@@ -28,6 +28,7 @@ router = APIRouter()
 async def create_domain(
         *,
         db: Session = Depends(deps.get_db),
+        current_user: models.User = Depends(deps.get_current_user),
         name=Body(...),
         description=Body(...),
         support_email=Body(...),
@@ -55,7 +56,7 @@ async def create_domain(
         repository=repository, branch=branch, commit_hash=commit_hash, pdf_daa=pdf_obj.binary
     )
     domain = crud.domain.create(db, obj_in=domain_in)
-    init_domain_roles(db)
+    init_domain_roles(db, domain_name=name, current_user_id = current_user.id, domain_id = domain.id)
     return domain
 
 
@@ -63,6 +64,7 @@ async def create_domain(
 def create_domain_no_daa(
         *,
         db: Session = Depends(deps.get_db),
+        current_user: models.User = Depends(deps.get_current_user),
         name=Body(...),
         description=Body(...),
         support_email=Body(...),
@@ -87,7 +89,7 @@ def create_domain_no_daa(
         repository=repository, branch=branch, commit_hash=commit_hash
     )
     domain = crud.domain.create_no_daa(db, obj_in=domain_in)
-    init_domain_roles(db)
+    init_domain_roles(db, domain_name=name, current_user_id = current_user.id, domain_id = domain.id)
     return domain
 
 
@@ -439,6 +441,7 @@ def get_role_by_domain(
 ) -> Any:
     """
     Get roles in the domain by domain_name.
+    It's fetching only roles that are assign in Domain_User table.
     """
     domain = crud.domain.get_by_name(db, name=domain_name)
     domain_user = crud.domain_user.get_by_domain_id(db, domain_id=domain.id)
@@ -483,20 +486,9 @@ def update_role_in_domain(
         can_edit_domain_settings: bool = Body(...),
 ) -> Any:
     """
-    Update a single role in the domain by domain_name.
+    Update a single role in the domain by domain_name and role_name.
     """
-    domain = crud.domain.get_by_name(db, name=domain_name)
-    domain_user = crud.domain_user.get_by_domain_id(db, domain_id=domain.id)
-
-    # TODO: do some enumeration for the roles
-    role_num = 1
-
-    root = floor(domain_user[0].role / 4)
-
-    target_role_id = root * 4 - role_num
-
-    fetched_role = crud.role.get_by_id(db, id=target_role_id)
-
+    role = crud.role.get_by_name_and_domain(db, name=role_name, domain_name=domain_name)
     role_in = RoleInDB(
         can_make_data_requests=can_make_data_requests,
         can_triage_data_requests=can_triage_data_requests,
@@ -509,7 +501,7 @@ def update_role_in_domain(
         can_upload_legal_document=can_upload_legal_document,
         can_edit_domain_settings=can_edit_domain_settings
     )
-    role = crud.role.update_role(db, db_obj=fetched_role, obj_in=role_in)
+    role = crud.role.update_role(db, db_obj=role, obj_in=role_in)
 
     if not role:
            raise HTTPException(
@@ -518,7 +510,7 @@ def update_role_in_domain(
            )
     return role
 
-def init_domain_roles(db: Session) -> None:
+def init_domain_roles(db: Session, domain_name: str, current_user_id: uuid.UUID, domain_id: uuid.UUID) -> None:
     administrator_in = schemas.RoleCreate(
         name = "Administrator",
         can_make_data_requests = True,
@@ -530,7 +522,8 @@ def init_domain_roles(db: Session) -> None:
         can_upload_data = True,
         can_upload_legal_document = True,
         can_edit_domain_settings = True,
-        can_manage_infrastructure = False
+        can_manage_infrastructure = False,
+        domain_name=domain_name
     )
 
     domain_owner_in = schemas.RoleCreate(
@@ -544,22 +537,34 @@ def init_domain_roles(db: Session) -> None:
         can_upload_data = True,
         can_upload_legal_document = True,
         can_edit_domain_settings = True,
-        can_manage_infrastructure = True
+        can_manage_infrastructure = True,
+        domain_name=domain_name
     )
 
     compliance_officer_in = schemas.RoleCreate(
         name = "Compliance Officer",
         can_triage_data_requests = True,
         can_manage_privacy_budget = True,
-        can_manage_users = True
+        can_manage_users = True,
+        domain_name=domain_name
     )
 
     data_scientist_in = schemas.RoleCreate(
         name = "Data Scientist",
-        can_make_data_requests = True
+        can_make_data_requests = True,
+        domain_name=domain_name
     )
 
     crud.role.create(db, obj_in=administrator_in)
-    crud.role.create(db, obj_in=domain_owner_in)
+    owner_role = crud.role.create(db, obj_in=domain_owner_in)
     crud.role.create(db, obj_in=compliance_officer_in)
     crud.role.create(db, obj_in=data_scientist_in)
+
+    domain_user_in = schemas.DomainUserCreate(
+        user = current_user_id,
+        domain = domain_id,
+        role = owner_role.id
+    )
+
+    domain_user = crud.domain_user.create(db, obj_in=domain_user_in)
+    print(domain_user.__dict__)

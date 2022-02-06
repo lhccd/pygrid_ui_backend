@@ -29,7 +29,8 @@ def init_db(db: Session) -> None:
         can_upload_data = True,
         can_upload_legal_document = True,
         can_edit_domain_settings = True,
-        can_manage_infrastructure = False
+        can_manage_infrastructure = False,
+        domain_name = "Default Domain"
     )
 
     domain_owner_in = schemas.RoleCreate(
@@ -43,19 +44,22 @@ def init_db(db: Session) -> None:
         can_upload_data = True,
         can_upload_legal_document = True,
         can_edit_domain_settings = True,
-        can_manage_infrastructure = True
+        can_manage_infrastructure = True,
+        domain_name = "Default Domain"
     )
 
     compliance_officer_in = schemas.RoleCreate(
         name = "Compliance Officer",
         can_triage_data_requests = True,
         can_manage_privacy_budget = True,
-        can_manage_users = True
+        can_manage_users = True,
+        domain_name = "Default Domain"
     )
 
     data_scientist_in = schemas.RoleCreate(
         name = "Data Scientist",
-        can_make_data_requests = True
+        can_make_data_requests = True,
+        domain_name = "Default Domain"
     )
 
     administrator = crud.role.get_by_name(db, name="Administrator")
@@ -92,9 +96,6 @@ def init_db(db: Session) -> None:
         domain = crud.domain.create(db, obj_in = domain_in)
 
     user = crud.user.get_by_email(db, email=settings.FIRST_SUPERUSER)
-
-#    if user:
-#        crud.user.delete(db, email="admin@backend.com")
 
     user_in = schemas.UserCreate(
         email=settings.FIRST_SUPERUSER,

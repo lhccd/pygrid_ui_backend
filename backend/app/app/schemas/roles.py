@@ -16,6 +16,7 @@ class RoleCreate(RoleBase):
     can_upload_data: Optional[bool]
     can_upload_legal_document: Optional[bool]
     can_edit_domain_settings: Optional[bool]
+    domain_name: Optional[str]
 
 class RoleUpdate(RoleBase):
     pass
@@ -31,6 +32,7 @@ class RoleInDB(RoleBase):
     can_upload_data: Optional[bool]
     can_upload_legal_document: Optional[bool]
     can_edit_domain_settings: Optional[bool]
+    domain_name: Optional[str]
 
     class Config:
             orm_mode = True
