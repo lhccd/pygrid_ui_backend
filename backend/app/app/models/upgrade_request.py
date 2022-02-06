@@ -17,7 +17,7 @@ class Upgrade_Request(Base):
     tags = Column(String(2048))
     result_id = Column(UUID(as_uuid=True), default=uuid.uuid4)
     reason = Column(String(1024))
-    updated_on = Column(DateTime, default=datetime.datetime.utcnow)
+    updated_on = Column(DateTime)
     reviewer_comments = Column(String(2048))
     updated_by = Column(String(255))
     request_owner = Column(UUID(as_uuid=True), ForeignKey("user.id"))

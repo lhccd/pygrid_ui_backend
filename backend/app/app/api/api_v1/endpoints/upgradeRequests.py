@@ -1,26 +1,13 @@
-import base64
-import io
 import uuid
 from datetime import datetime
-from math import floor
 from typing import Any, List
 
-from fastapi import APIRouter, Body, Depends, HTTPException, File, UploadFile, Response
-from fastapi.encoders import jsonable_encoder
+from fastapi import APIRouter, Body, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app import crud, models, schemas
 from app.api import deps
-from starlette.responses import StreamingResponse, PlainTextResponse
-
-from ....schemas.domain import Domain, DomainCreate, DomainUpdate, DomainProfile, DomainUpdateVersion
-from ....schemas.tags import Tags
-from ....schemas.user import UserDetail, User
-from ....schemas.domain_user import DomainUserCreate, DomainUser
-from ....schemas.roles import RoleInDB
-from pydantic.networks import EmailStr
-from fastapi.responses import FileResponse
-from ....schemas.upgrade_request import UpgradeRequest, UpgradeRequestCreate
+from ....schemas.upgrade_request import UpgradeRequest, UpgradeRequestCreate, UpgradeRequestUpdate
 
 router = APIRouter()
 
@@ -32,7 +19,6 @@ def create_request(
         current_user: models.User = Depends(deps.get_current_user),
         domain_name: str = Body(...),
         requested_budget: float = Body(...),
-        tags: str = Body(None),
         reason: str = Body(None)
 ) -> Any:
     """
@@ -48,7 +34,6 @@ def create_request(
                                            request_date=datetime.now(),
                                            requested_budget=requested_budget,
                                            status="pending",
-                                           tags=tags,
                                            reason=reason,
                                            request_owner=current_user.id)
     upgrade_request = crud.upgrade_requests.create(db, obj_in=upgrade_request_in)
@@ -76,13 +61,84 @@ def get_requests(
     return crud.upgrade_requests.get_upgrade_requests_of_domain(db, domain_id=domain.id)
 
 
+@router.get("/current", response_model=List[UpgradeRequest])
+def get_current_requests(
+        *,
+        db: Session = Depends(deps.get_db),
+        current_user: models.User = Depends(deps.get_current_user),
+        domain_name: str
+) -> Any:
+    domain = crud.domain.get_by_name(db, name=domain_name)
+    if not domain:
+        raise HTTPException(
+            status_code=400,
+            detail="This domain " + domain_name + " does not exist in the system",
+        )
+    return crud.upgrade_requests.get_requests(db, domain_id=domain.id)
+
+
+
+@router.get("/history", response_model=List[UpgradeRequest])
+def get_history_requests(
+        *,
+        db: Session = Depends(deps.get_db),
+        current_user: models.User = Depends(deps.get_current_user),
+        domain_name: str
+) -> Any:
+    domain = crud.domain.get_by_name(db, name=domain_name)
+    if not domain:
+        raise HTTPException(
+            status_code=400,
+            detail="This domain " + domain_name + " does not exist in the system",
+        )
+    return crud.upgrade_requests.get_requests(db, domain_id=domain.id, status="history")
+
+
 @router.put("/accept", response_model=UpgradeRequest)
 def accept_request(
         *,
         db: Session = Depends(deps.get_db),
         current_user: models.User = Depends(deps.get_current_user),
-
+        request_id: uuid.UUID,
+        reviewer_comments: str,
 ) -> Any:
-    pass
+    request = crud.upgrade_requests.get_by_id(db, id=request_id)
+    if not request:
+        raise HTTPException(
+            status_code=400,
+            detail="This request does not exist in the system",
+        )
+    request_in = UpgradeRequestUpdate(
+        status="accepted",
+        reviewer_comments=reviewer_comments,
+        updated_by=current_user.full_name,
+        updated_on=datetime.now()
+    )
+    result = crud.upgrade_requests.update(db, db_obj=request, obj_in=request_in)
+    return result
+
+
+@router.put("/reject", response_model=UpgradeRequest)
+def accept_request(
+        *,
+        db: Session = Depends(deps.get_db),
+        current_user: models.User = Depends(deps.get_current_user),
+        request_id: uuid.UUID,
+        reviewer_comments: str,
+) -> Any:
+    request = crud.upgrade_requests.get_by_id(db, id=request_id)
+    if not request:
+        raise HTTPException(
+            status_code=400,
+            detail="This request does not exist in the system",
+        )
+    request_in = UpgradeRequestUpdate(
+        status="rejected",
+        reviewer_comments=reviewer_comments,
+        updated_by=current_user.full_name,
+        updated_on=datetime.now()
+    )
+    result = crud.upgrade_requests.update(db, db_obj=request, obj_in=request_in)
+    return result
 
 

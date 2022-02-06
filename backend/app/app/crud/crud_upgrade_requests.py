@@ -5,6 +5,7 @@ from uuid import UUID
 from typing import Any, Dict, Optional, Union
 
 from sqlalchemy.orm import Session
+from sqlalchemy import and_, or_, not_
 
 from app import crud
 from app.crud.base import CRUDBase
@@ -21,13 +22,24 @@ class CRUDUpgradeRequests(CRUDBase[Upgrade_Request, UpgradeRequestCreate, Upgrad
     def get_upgrade_requests_of_domain(self, db: Session, *, domain_id: uuid.UUID):
         return db.query(Upgrade_Request).filter(Upgrade_Request.domain == domain_id).all()
 
+    def get_requests(self, db: Session, *, domain_id: uuid.UUID, status: str = "pending"):
+        if status is not "pending":
+            print(status)
+            return db.query(Upgrade_Request).filter(and_(
+                Upgrade_Request.domain == domain_id,
+                not_(Upgrade_Request.status.like("pending"))
+            )).all()
+        return db.query(Upgrade_Request).filter(and_(
+                Upgrade_Request.domain == domain_id,
+                Upgrade_Request.status.like(status)
+            )).all()
+
     def create(self, db: Session, *, obj_in: UpgradeRequestCreate):
         db_obj = Upgrade_Request(
             domain=obj_in.domain,
             request_date=obj_in.request_date,
-            requested_budget= obj_in.requested_budget,
+            requested_budget=obj_in.requested_budget,
             status=obj_in.status,
-            tags=obj_in.tags,
             reason=obj_in.reason,
             request_owner=obj_in.request_owner
         )

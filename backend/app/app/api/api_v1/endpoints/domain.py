@@ -176,28 +176,6 @@ def get_domain_profile(
     return domain
 
 
-"""
-@router.get("/domain-profile")
-def get_domain_profile(
-        *,
-        db: Session = Depends(deps.get_db),
-        current_user: models.User = Depends(deps.get_current_user),
-        domain_name: str,
-) -> Any:
-    domain = crud.domain.get_by_name(db, name=domain_name)
-    owner = crud.domain_user.get_owner(db, domain_name=domain_name)
-    list = []
-    list.append(domain)
-    list.append(owner)
-    if not domain:
-        raise HTTPException(
-            status_code=400,
-            detail="This domain " + domain_name + " does not exist",
-        )
-    return list
-"""
-
-
 @router.get("/domain-pdf")
 def get_domain_pdf(
         *,

@@ -10,12 +10,7 @@ class UpgradeRequestBase(BaseModel):
     request_date: Optional[datetime] = None
     requested_budget: Optional[float] = None
     status: Optional[str] = None
-    tags: Optional[str] = None
-    result_id: Optional[uuid.UUID] = None
     reason: Optional[str] = None
-    updated_on: Optional[datetime] = None
-    reviewer_comments: Optional[str] = None
-    updated_by: Optional[str] = None
     request_owner: Optional[uuid.UUID] = None
 
 
@@ -24,6 +19,9 @@ class UpgradeRequestCreate(UpgradeRequestBase):
 
 
 class UpgradeRequestUpdate(UpgradeRequestBase):
+    reviewer_comments: Optional[str] = None
+    updated_on: Optional[datetime] = None
+    updated_by: Optional[str] = None
     pass
 
 
@@ -35,4 +33,7 @@ class UpgradeRequestInDBBase(UpgradeRequestBase):
 
 
 class UpgradeRequest(UpgradeRequestInDBBase):
+    reviewer_comments: Optional[str] = None
+    updated_on: Optional[datetime] = None
+    updated_by: Optional[str] = None
     pass
