@@ -415,6 +415,7 @@ def delete_user_by_id(
     + deleting roles permissions etc
     """
     try:
+        crud.domain_user.delete_by_user_id(db, user_id = user_id)
         crud.user.delete_by_id(db, id=user_id)
     except Exception as err:
         raise HTTPException(

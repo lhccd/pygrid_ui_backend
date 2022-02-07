@@ -71,5 +71,7 @@ class CRUDDomainUser(CRUDBase[Domain_User, DomainUserCreate, DomainUserUpdate]):
         owner = crud.user.get_by_id(db=db, id=domain_user_owner.user)
         return owner
 
+    def delete_by_user_id(self, db: Session, *, user_id: uuid.UUID):
+        return db.query(Domain_User).filter(Domain_User.user == user_id).delete()
 
 domain_user = CRUDDomainUser(Domain_User)
