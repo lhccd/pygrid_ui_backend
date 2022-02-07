@@ -432,8 +432,27 @@ def get_role_of_user_in_domain(
         )
     return role
 
-@router.get("/get-roles-by-domain", response_model=List[RoleInDB])
+@router.get("/role-by-domain", response_model=RoleInDB)
 def get_role_by_domain(
+        *,
+        db: Session = Depends(deps.get_db),
+        current_user: models.User = Depends(deps.get_current_user),
+        domain_name: str,
+        role_name: str
+) -> Any:
+    """
+    Get a role by domain
+    """
+    role = crud.role.get_by_name_and_domain(db, name=role_name, domain_name=domain_name)
+    if not role:
+        raise HTTPException(
+            status_code=404,
+            detail="role not found"
+        )
+    return role
+
+@router.get("/get-roles-by-domain", response_model=List[RoleInDB])
+def get_roles_by_domain(
         *,
         db: Session = Depends(deps.get_db),
         current_user: models.User = Depends(deps.get_current_user),

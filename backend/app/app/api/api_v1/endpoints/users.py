@@ -216,7 +216,7 @@ async def create_user_daa(
         )
     domain_user = DomainUserCreate(user=user.id,
                                    domain=domain.id,
-                                   role=1) # TODO: shouldn't be hardcoded or at least who is the data scientist?
+                                   role=4)
     crud.domain.add_user(db, obj_in=domain_user)
     return user
 
