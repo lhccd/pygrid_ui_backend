@@ -371,7 +371,7 @@ def get_accepted_users(
     return result
 
 
-@router.get("/pending-users", response_model=List[ActiveUser])
+@router.get("/pending-users", response_model=List[UserDetail])
 def get_pending_users(
         db: Session = Depends(deps.get_db),
         skip: int = 0,
@@ -394,7 +394,7 @@ def get_pending_users(
     return result
 
 
-@router.get("/denied-users", response_model=List[ActiveUser])
+@router.get("/denied-users", response_model=List[UserDetail])
 def get_denied_users(
         db: Session = Depends(deps.get_db),
         skip: int = 0,

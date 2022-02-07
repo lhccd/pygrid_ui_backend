@@ -379,7 +379,7 @@ def update_domain_settings(
     Update domain's settings
     """
     domain = crud.domain.get_by_name(db, name=domain_name)
-    domain_in = DomainUpdate(description=description, support_email=support_email)
+    domain_in = DomainUpdate(description=description, support_email=support_email, last_updated=datetime.now())
     if not domain:
         raise HTTPException(
             status_code=400,
