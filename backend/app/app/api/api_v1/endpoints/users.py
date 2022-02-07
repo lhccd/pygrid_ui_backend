@@ -167,9 +167,15 @@ def create_user_open(
             status_code=400,
             detail="The user is already in the domain"
         )
+    role = crud.role.get_by_name_and_domain(db, name="Data Scientist", domain_name=domain_name)
+    if not role:
+        raise HTTPException(
+            status_code=404,
+            detail="Role does not exist"
+        )
     domain_user = DomainUserCreate(user=user.id,
                                    domain=domain.id,
-                                   role=1)  # TODO: shouldn't be hardcoded or at least who is the data scientist?
+                                   role=role.id)
     crud.domain.add_user(db, obj_in=domain_user)
     return user
 
@@ -214,9 +220,15 @@ async def create_user_daa(
             status_code=400,
             detail="The user is already in the domain"
         )
+    role = crud.role.get_by_name_and_domain(db, name="Data Scientist", domain_name=domain_name)
+    if not role:
+        raise HTTPException(
+            status_code=404,
+            detail="Role does not exist"
+        )
     domain_user = DomainUserCreate(user=user.id,
                                    domain=domain.id,
-                                   role=4)
+                                   role=role.id)
     crud.domain.add_user(db, obj_in=domain_user)
     return user
 

@@ -16,7 +16,7 @@ from starlette.responses import StreamingResponse, PlainTextResponse
 from ....schemas.domain import Domain, DomainCreate, DomainUpdate, DomainProfile, DomainUpdateVersion
 from ....schemas.tags import Tags
 from ....schemas.user import UserDetail, User
-from ....schemas.domain_user import DomainUserCreate, DomainUser
+from ....schemas.domain_user import DomainUserCreate, DomainUser, DomainUserUpdate
 from ....schemas.roles import RoleInDB
 from pydantic.networks import EmailStr
 from fastapi.responses import FileResponse
@@ -100,7 +100,7 @@ def add_user_to_domain(
         current_user: models.User = Depends(deps.get_current_user),
         domain_name: str = Body(...),
         user_email: EmailStr = Body(...),
-        role: int = Body(...)
+        role_name: str = Body(...)
 ) -> Any:
     """
     Add a user into already created domain
@@ -123,6 +123,7 @@ def add_user_to_domain(
             status_code=400,
             detail="This is user already in this domain"
         )
+    role = crud.role.get_by_name_and_domain(db, name=role_name, domain_name=domain_name)
     domain_user_in = DomainUserCreate(user=user.id, domain=domain.id, role=role)
     domain_user = crud.domain_user.create(db, obj_in=domain_user_in)
     return domain_user
@@ -330,6 +331,41 @@ def update_domain(
     return domain
 
 
+@router.put("/update-role-of-user", response_model=DomainUser)
+def update_role_of_user(
+        *,
+        db: Session = Depends(deps.get_db),
+        current_user: models.User = Depends(deps.get_current_user),
+        user_email: EmailStr = Body(...),
+        domain_name: str = Body(...),
+        role_name: str = Body(...)
+) -> Any:
+    """
+    Change a user's role in  a domain
+    """
+    domain = crud.domain.get_by_name(db, name=domain_name)
+    if not domain:
+        raise HTTPException(
+            status_code=400,
+            detail="The domain does not exist in the system",
+        )
+    user = crud.user.get_by_email(db, email=user_email)
+    if not user:
+        raise HTTPException(
+            status_code=404,
+            detail="User not found"
+        )
+    existing_domain_user = crud.domain_user.get_user(db, domain_name=domain_name, user_email=user_email)
+    if not existing_domain_user:
+        raise HTTPException(
+            status_code=400,
+            detail="This user does not exist in this domain"
+        )
+    role = crud.role.get_by_name_and_domain(db, name=role_name, domain_name=domain_name)
+    domain_user_in = DomainUserUpdate(domain=domain.id, user=user.id, role=role.id)
+    result = crud.domain_user.update(db, db_obj=existing_domain_user, obj_in=domain_user_in)
+    return result
+
 @router.put("/domain-profile", response_model=DomainProfile)
 def update_domain_settings(
         *,
@@ -420,11 +456,13 @@ def get_role_of_user_in_domain(
     """
     Get user's role based on user's email.
     """
-    user = crud.user.get_by_email(db, email=user_email)
-    domain = crud.domain.get_by_name(db, name=domain_name)
-    user_domain_role = crud.domain_user.get_by_user_id(db, user_id=user.id, domain_id=domain.id)
-    role = crud.role.get_by_id(db, id=user_domain_role.role)
-
+    existing_domain_user = crud.domain_user.get_user(db, domain_name=domain_name, user_email=user_email)
+    if not existing_domain_user:
+        raise HTTPException(
+            status_code=400,
+            detail="This user does not exist in this domain"
+        )
+    role = crud.role.get_by_id(db, id=existing_domain_user.role)
     if not role:
         raise HTTPException(
             status_code=500,
